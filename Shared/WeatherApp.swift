@@ -4,7 +4,7 @@ import SwiftUI
 struct WeatherApp: App {
     var body: some Scene {
         WindowGroup {
-            SearchView()
+            CityView(city: CityViewModel(city: SearchView_Previews.debugList()[0]))
                 .environmentObject(Store())
         }
     }

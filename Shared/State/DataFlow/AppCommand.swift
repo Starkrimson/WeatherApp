@@ -24,6 +24,27 @@ struct FindAppCommand: AppCommand {
     }
 }
 
+struct OneCallCommand: AppCommand {
+    let city: CityViewModel
+    
+    func execute(in store: Store) {
+        let token = SubscriptionToken()
+        
+        OneCallRequest(lat: city.coord.lat, lon: city.coord.lon)
+            .publisher
+            .receive(on: DispatchQueue.main)
+            .sink(receiveCompletion: { completion in
+                if case .failure(let error) = completion {
+                    store.dispatch(.loadCityForecastDone(result: .failure(error)))
+                }
+                token.unseal()
+            }, receiveValue: { value in
+                store.dispatch(.loadCityForecastDone(result: .success((city.id, value))))
+            })
+            .seal(in: token)
+    }
+}
+
 class SubscriptionToken {
     var cancellable: AnyCancellable?
     func unseal() { cancellable = nil }

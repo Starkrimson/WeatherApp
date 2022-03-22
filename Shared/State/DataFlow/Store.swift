@@ -33,6 +33,20 @@ class Store: ObservableObject {
             case .failure(let error):
                 dump(error)
             }
+            
+        case .loadCityForecast(city: let city):
+            appCommand = OneCallCommand(city: city)
+        case .loadCityForecastDone(result: let result):
+            switch result {
+            case .success(let (id, value)):
+                if appState.cityList.forecast == nil {
+                    appState.cityList.forecast = [id: value]
+                } else {
+                    appState.cityList.forecast?[id] = value
+                }
+            case .failure(let error):
+                dump(error)
+            }
         }
 
         return (appState, appCommand)
