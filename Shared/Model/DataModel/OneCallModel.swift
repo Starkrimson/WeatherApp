@@ -62,7 +62,7 @@ struct DailyForecast: Codable {
 
 extension Forecast {
 
-    struct Condition: Codable {
+    struct Condition: Codable, Identifiable {
      var id: Int
      var main: String
      var description: String
