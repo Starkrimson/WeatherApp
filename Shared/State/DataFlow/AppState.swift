@@ -8,9 +8,15 @@ struct AppState {
 
 extension AppState {
 
-    struct Search {
-        var keyword: String = ""
+    class Search {
+        @Published var keyword: String = ""
         var list: [Find.City] = []
+        
+        var state: State = .normal
+        
+        enum State: Equatable {
+            case normal, loading, noResult, failed(String)
+        }
     }
 }
 
@@ -20,5 +26,12 @@ extension AppState {
         
         @FileStorage(directory: .cachesDirectory, fileName: "forecast.json")
         var forecast: [Int: OneCall]?
+        
+        @FileStorage(directory: .documentDirectory, fileName: "followingList.json")
+        var followingList: [CityViewModel]?
+        
+        func isFollowing(_ id: Int) -> Bool {
+            followingList?.contains(where: { $0.id == id }) == true
+        }
     }
 }

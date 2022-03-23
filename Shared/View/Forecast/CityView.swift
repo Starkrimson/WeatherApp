@@ -146,6 +146,15 @@ struct CityView: View {
             }
             .navigationTitle(city.description)
             .navigationBarTitleDisplayMode(.large)
+            .navigationBarItems(trailing: Button(action: {
+                store.dispatch(.follow(city: city))
+            }) {
+                if store.appState.cityList.isFollowing(city.id) {
+                    EmptyView()
+                } else {
+                    Image(systemName: "star")
+                }
+            })
     }
 }
 

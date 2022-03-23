@@ -11,14 +11,48 @@ struct SearchView: View {
     var searchBinding: Binding<AppState.Search> {
         $store.appState.search
     }
-
-    var body: some View {
-        NavigationView {
-            List(search.list) { city in
-                NavigationLink(destination: CityView(city: CityViewModel(city: city))) {
-                    CityRow(city: city)
+    
+    var followingList: [CityViewModel] {
+        store.appState.cityList.followingList ?? []
+    }
+    
+    @ViewBuilder
+    var searchSection: some View {
+        switch (search.state, search.keyword.count) {
+        case (_, 0): EmptyView()
+        case (.loading, _): Text("搜索中...")
+        case (.noResult, _): Text("无结果")
+        case (.failed(let tips), _): Text(tips)
+        case (.normal, _) where search.list.count > 0:
+            Section(header: Text("搜索结果").headerText()) {
+                ForEach(search.list) { city in
+                    NavigationLink(destination: CityView(city: CityViewModel(city: city))) {
+                        CityRow(city: city)
+                    }
                 }
             }
+        default: EmptyView()
+        }
+    }
+    
+    var body: some View {
+        NavigationView {
+            List {
+                searchSection
+                Section(header: Text("关注").headerText()) {
+                        ForEach(followingList) { city in
+                            NavigationLink(destination: CityView(city: city)) {
+                                HStack {
+                                    Text(city.description)
+                                        .font(.headline)
+                                    Spacer()
+                                    KFImage(city.country.flagURL)
+                                }
+                            }
+                        }
+                    }
+            }
+                .listStyle(.sidebar)
                 .searchable(text: searchBinding.keyword,
                     placement: .navigationBarDrawer(displayMode: .always),
                     prompt: "搜索城市")
@@ -26,7 +60,7 @@ struct SearchView: View {
                     store.dispatch(.find)
                 }
                 .navigationBarTitleDisplayMode(.large)
-                .navigationTitle("Search")
+                .navigationTitle("天气")
         }
             .navigationViewStyle(.columns)
     }
@@ -58,7 +92,15 @@ struct CityRow: View {
             }
             Text(city.main.temp.k2c)
         }
+            .padding(.vertical, 10)
             .lineLimit(1)
+    }
+}
+
+private extension Text {
+    func headerText() -> some View {
+        font(.footnote)
+            .foregroundColor(Color(.systemGray2))
     }
 }
 
