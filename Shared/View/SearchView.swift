@@ -15,7 +15,9 @@ struct SearchView: View {
     var body: some View {
         NavigationView {
             List(search.list) { city in
-                CityRow(city: city)
+                NavigationLink(destination: CityView(city: CityViewModel(city: city))) {
+                    CityRow(city: city)
+                }
             }
                 .searchable(text: searchBinding.keyword,
                     placement: .navigationBarDrawer(displayMode: .always),
@@ -26,7 +28,7 @@ struct SearchView: View {
                 .navigationBarTitleDisplayMode(.large)
                 .navigationTitle("Search")
         }
-            .navigationViewStyle(.stack)
+            .navigationViewStyle(.columns)
     }
 }
 

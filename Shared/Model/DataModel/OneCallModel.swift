@@ -11,7 +11,9 @@ struct OneCall: Codable {
     var daily: [DailyForecast]
 }
 
-struct Forecast: Codable {
+struct Forecast: Codable, Identifiable {
+    var id: Int { dt }
+    
     var dt: Int
     var sunrise: Int?
     var sunset: Int?
@@ -25,12 +27,24 @@ struct Forecast: Codable {
     var visibility: Double
     var wind_speed: Double
     var wind_deg: Int
-    var wind_gust: Double
+    var wind_gust: Double?
     var weather: [Condition]
     var pop: Double?
+    var rain: VolumeForLastHour?
+    var snow: VolumeForLastHour?
+    
+    struct VolumeForLastHour: Codable {
+        var lastHour: Double?
+    
+        enum CodingKeys: String, CodingKey {
+            case lastHour = "1h"
+        }
+    }
 }
 
-struct DailyForecast: Codable {
+struct DailyForecast: Codable, Identifiable {
+    var id: Int { dt }
+    
     var dt: Int
     var sunrise: Int
     var sunset: Int
@@ -48,6 +62,7 @@ struct DailyForecast: Codable {
     var clouds: Double
     var pop: Double
     var rain: Double?
+    var snow: Double?
     var uvi: Double
 
     struct Temp: Codable {

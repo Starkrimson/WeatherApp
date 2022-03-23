@@ -20,7 +20,11 @@ extension Double {
 
     // 开尔文转摄氏度
     var k2c: String {
-        "\(Int(self - 273.15))°C"
+        (self - 273.15).toString(maximumFractionDigits: 0) + "°C"
+    }
+    
+    var celsius: String {
+        toString(maximumFractionDigits: 0) + "°C"
     }
 
     var toString: String {
@@ -32,5 +36,23 @@ extension Double {
         formatter.maximumFractionDigits = maximumFractionDigits
         let number = NSNumber(value: self)
         return formatter.string(from: number) ?? ""
+    }
+}
+
+extension Int {
+    
+    var toDate: Date {
+        Date(timeIntervalSince1970: Double(self))
+    }
+}
+
+extension Date {
+    
+    func string(_ localizedDateFormatFromTemplates: String..., locale identifier: String? = Locale.preferredLanguages.first) -> String {
+        let dateFormatter = DateFormatter()
+        let template = localizedDateFormatFromTemplates.reduce(into: "") { $0 += $1 }
+        dateFormatter.locale = Locale(identifier: identifier ?? "en_US")
+        dateFormatter.setLocalizedDateFormatFromTemplate(template)
+        return dateFormatter.string(from: self)
     }
 }
