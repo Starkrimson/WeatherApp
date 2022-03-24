@@ -12,24 +12,17 @@ struct WeatherItems: View {
     
     var body: some View {
         VStack(alignment: .leading) {
-            HStack(spacing: 2) {
+            HStack(spacing: 20) {
                 if let rain = rain {
-                    Image(systemName: "cloud.rain")
-                    Text(rain.toString(maximumFractionDigits: 2) + "mm")
-                        .padding(.trailing, 18)
+                    Label(rain.toString(maximumFractionDigits: 2) + "mm", systemImage: "cloud.rain")
                 }
                 if let snow = snow {
-                    Image(systemName: "cloud.snow")
-                    Text(snow.toString(maximumFractionDigits: 2) + "mm")
-                        .padding(.trailing, 18)
+                    Label(snow.toString(maximumFractionDigits: 2) + "mm", systemImage: "cloud.snow")
                 }
-            
-                Image(systemName: "wind")
-                Text(windSpeed.toString(maximumFractionDigits: 1) + "m/s")
-                    .padding(.trailing, 18)
-            
-                Image(systemName: "barometer")
-                Text("\(pressure)hPa")
+                
+                Label(windSpeed.toString(maximumFractionDigits: 1) + "m/s", systemImage: "wind")
+                
+                Label("\(pressure)hPa", systemImage: "barometer")
             }
             
             HStack(spacing: 20) {
