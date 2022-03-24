@@ -40,17 +40,23 @@ struct SearchView: View {
             List {
                 searchSection
                 Section(header: Text("关注").headerText()) {
-                        ForEach(followingList) { city in
-                            NavigationLink(destination: CityView(city: city)) {
-                                HStack {
-                                    Text(city.description)
-                                        .font(.headline)
-                                    Spacer()
-                                    KFImage(city.country.flagURL)
-                                }
+                    ForEach(followingList) { city in
+                        NavigationLink(destination: CityView(city: city)) {
+                            HStack {
+                                Text(city.description)
+                                    .font(.headline)
+                                Spacer()
+                                KFImage(city.country.flagURL)
                             }
                         }
                     }
+                        .onDelete { (indexSet: IndexSet) in
+                            store.dispatch(.unfollowCity(indexSet: indexSet))
+                        }
+                        .onMove { set, i in
+                            store.dispatch(.moveCity(indexSet: set, toIndex: i))
+                        }
+                }
             }
                 .listStyle(.sidebar)
                 .searchable(text: searchBinding.keyword,
@@ -59,6 +65,13 @@ struct SearchView: View {
                 .onSubmit(of: .search) {
                     store.dispatch(.find)
                 }
+                #if os(iOS) && !targetEnvironment(macCatalyst)
+                .toolbar {
+                    ToolbarItem {
+                        EditButton()
+                    }
+                }
+                #endif
                 .navigationBarTitleDisplayMode(.large)
                 .navigationTitle("天气")
         }

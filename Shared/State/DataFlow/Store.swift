@@ -62,6 +62,10 @@ class Store: ObservableObject {
             var list = appState.cityList.followingList ?? []
             list.append(city)
             appState.cityList.followingList = list
+        case .unfollowCity(let indexSet):
+            appState.cityList.followingList?.remove(atOffsets: indexSet)
+        case let .moveCity(indexSet, toIndex):
+            appState.cityList.followingList?.move(fromOffsets: indexSet, toOffset: toIndex)
             
         case .loadCityForecast(city: let city):
             appCommand = OneCallCommand(city: city)
