@@ -35,11 +35,11 @@ struct OneCallCommand: AppCommand {
             .receive(on: DispatchQueue.main)
             .sink(receiveCompletion: { completion in
                 if case .failure(let error) = completion {
-                    store.dispatch(.loadCityForecastDone(result: .failure(error)))
+                    store.dispatch(.loadCityForecastDone(cityID: city.id, result: .failure(error)))
                 }
                 token.unseal()
             }, receiveValue: { value in
-                store.dispatch(.loadCityForecastDone(result: .success((city.id, value))))
+                store.dispatch(.loadCityForecastDone(cityID: city.id, result: .success(value)))
             })
             .seal(in: token)
     }

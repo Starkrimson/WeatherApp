@@ -10,5 +10,5 @@ enum AppAction {
     case moveCity(indexSet: IndexSet, toIndex: Int)
     
     case loadCityForecast(city: CityViewModel)
-    case loadCityForecastDone(result: Result<(Int, OneCall), AppError>)
+    case loadCityForecastDone(cityID: Int, result: Result<OneCall, AppError>)
 }

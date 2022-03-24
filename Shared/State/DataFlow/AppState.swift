@@ -30,6 +30,8 @@ extension AppState {
         @FileStorage(directory: .documentDirectory, fileName: "followingList.json")
         var followingList: [CityViewModel]?
         
+        var loadingCityIDSet: Set<Int> = []
+        
         func isFollowing(_ id: Int) -> Bool {
             followingList?.contains(where: { $0.id == id }) == true
         }

@@ -68,10 +68,13 @@ class Store: ObservableObject {
             appState.cityList.followingList?.move(fromOffsets: indexSet, toOffset: toIndex)
             
         case .loadCityForecast(city: let city):
+            guard !appState.cityList.loadingCityIDSet.contains(city.id) else { break }
+            appState.cityList.loadingCityIDSet.insert(city.id)
             appCommand = OneCallCommand(city: city)
-        case .loadCityForecastDone(result: let result):
+        case .loadCityForecastDone(let id, result: let result):
+            appState.cityList.loadingCityIDSet.remove(id)
             switch result {
-            case .success(let (id, value)):
+            case .success(let value):
                 var forecast = appState.cityList.forecast ?? [:]
                 forecast[id] = value
                 appState.cityList.forecast = forecast
