@@ -74,6 +74,8 @@ struct SearchView: View {
                 #endif
                 .navigationBarTitleDisplayMode(.large)
                 .navigationTitle("天气")
+    
+            Image(systemName: "cloud.sun").font(.largeTitle)
         }
             .navigationViewStyle(.columns)
     }

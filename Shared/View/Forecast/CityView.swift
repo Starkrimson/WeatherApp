@@ -11,49 +11,112 @@ struct CityView: View {
     
     @State private var selectedDailyIndex: Int = 0
     
-    var current: some View {
-        guard let current = forecast?.current, let weather = current.weather.first else {
-            return AnyView(EmptyView())
-        }
-        
-        let content = VStack(alignment: .leading) {
-            Text(current.dt.toDate.string("HH:mm", "MMM", "dd"))
-                .foregroundColor(Color(.systemRed))
-                .padding(.top, 10)
-                .padding(.bottom, 5)
-            Text("Feels like \(current.feels_like.celsius). \(weather.description.capitalized)")
-                .font(.headline)
-            HStack {
-                KFImage(weather.icon.weatherIconURL)
-                    .resizable()
-                    .frame(width: 100, height: 100)
-                Text(current.temp.celsius)
-                    .font(.largeTitle)
-                    .fontWeight(.medium)
-                Divider()
-                    .background(Color(.systemRed))
-                    .padding(.horizontal, 20)
-                WeatherItems(
-                    rain: current.rain?.lastHour,
-                    snow: current.snow?.lastHour,
-                    windSpeed: current.wind_speed,
-                    pressure: current.pressure,
-                    humidity: current.humidity,
-                    uvi: current.uvi,
-                    dewPoint: current.dew_point,
-                    visibility: current.visibility)
+    var body: some View {
+        ScrollView(.vertical) {
+            if let forecast = forecast {
+                VStack(alignment: .leading) {
+                    CurrentView(current: forecast.current)
+                    HourlyView(hourly: forecast.hourly)
+                    DailyView(daily: forecast.daily, selectedDailyIndex: $selectedDailyIndex)
+                }
+                    .padding(.leading, 21)
+                    .padding(.bottom, 20)
             }
         }
+            .ignoresSafeArea(edges: .bottom)
+            .onAppear {
+                if forecast == nil || (Date().timeIntervalSince1970 - Double(forecast!.current.dt)) > 600 {
+                    store.dispatch(.loadCityForecast(city: city))
+                }
+            }
+            .navigationTitle(city.description)
+            .navigationBarTitleDisplayMode(.large)
+            .navigationBarItems(trailing: Button(action: {
+                store.dispatch(.follow(city: city))
+            }) {
+                if store.appState.cityList.isFollowing(city.id) {
+                    EmptyView()
+                } else {
+                    Image(systemName: "star")
+                }
+            })
+    }
+}
+
+private struct CurrentView: View {
+    let current: Forecast
     
-        return AnyView(content)
+    var weather: Forecast.Condition? {
+        current.weather.first
     }
     
-    var hourly: some View {
-        guard let hourly = forecast?.hourly else {
-            return AnyView(EmptyView())
-        }
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass: UserInterfaceSizeClass?
     
-        return AnyView(VStack(alignment: .leading) {
+    var feelsLike: some View {
+        Text("Feels like \(current.feels_like.celsius). \(weather?.description.capitalized ?? "")")
+            .font(.headline)
+    }
+    
+    var temp: some View {
+        HStack {
+            if let url = weather?.icon.weatherIconURL {
+                KFImage(url)
+                    .resizable()
+                    .frame(width: 100, height: 100)
+            }
+            Text(current.temp.celsius)
+                .font(.largeTitle)
+                .fontWeight(.medium)
+        }
+    }
+    
+    var weatherItems: some View {
+        WeatherItems(
+            rain: current.rain?.lastHour,
+            snow: current.snow?.lastHour,
+            windSpeed: current.wind_speed,
+            pressure: current.pressure,
+            humidity: current.humidity,
+            uvi: current.uvi,
+            dewPoint: current.dew_point,
+            visibility: current.visibility)
+    }
+    
+    var body: some View {
+            VStack(alignment: .leading) {
+                Text(current.dt.toDate.string("HH:mm", "MMM", "dd"))
+                    .foregroundColor(Color(.systemRed))
+                    .padding(.top, 10)
+                    .padding(.bottom, 5)
+    
+                if horizontalSizeClass == .compact {
+                    HStack {
+                        temp.layoutPriority(1)
+                        Divider()
+                            .background(Color(.systemRed))
+                            .padding(.horizontal, 10)
+                        feelsLike
+                    }
+                        .padding(.trailing, 10)
+                } else {
+                    feelsLike
+                    HStack {
+                        temp
+                        Divider()
+                            .background(Color(.systemRed))
+                            .padding(.horizontal, 20)
+                        weatherItems
+                    }
+                }
+            }
+    }
+}
+
+private struct HourlyView: View {
+    let hourly: [Forecast]
+    
+    var body: some View {
+        VStack(alignment: .leading) {
             Text("Hourly forecast")
                 .font(.title2)
                 .fontWeight(.medium)
@@ -82,14 +145,16 @@ struct CityView: View {
                     }
                 }
             }
-        })
-    }
-    
-    var daily: some View {
-        guard let daily = forecast?.daily, daily.count > 0 else {
-            return AnyView(EmptyView())
         }
-        return AnyView(VStack(alignment: .leading) {
+    }
+}
+
+private struct DailyView: View {
+    let daily: [DailyForecast]
+    @Binding var selectedDailyIndex: Int
+    
+    var body: some View {
+        VStack(alignment: .leading) {
             Text("8-Day forecast")
                 .font(.title2)
                 .fontWeight(.medium)
@@ -122,36 +187,10 @@ struct CityView: View {
                     }
                 }
             }
-            DailyForecastDetailView(daily: daily[selectedDailyIndex])
-        })
-    }
-    
-    var body: some View {
-        ScrollView(.vertical) {
-            VStack(alignment: .leading) {
-                current
-                hourly
-                daily
+            if daily.count > selectedDailyIndex {
+                DailyForecastDetailView(daily: daily[selectedDailyIndex])
             }
         }
-            .padding(.leading, 21)
-            .padding(.bottom, 20)
-            .onAppear {
-                if forecast == nil || (Date().timeIntervalSince1970 - Double(forecast!.current.dt)) > 600 {
-                    store.dispatch(.loadCityForecast(city: city))
-                }
-            }
-            .navigationTitle(city.description)
-            .navigationBarTitleDisplayMode(.large)
-            .navigationBarItems(trailing: Button(action: {
-                store.dispatch(.follow(city: city))
-            }) {
-                if store.appState.cityList.isFollowing(city.id) {
-                    EmptyView()
-                } else {
-                    Image(systemName: "star")
-                }
-            })
     }
 }
 
@@ -160,6 +199,5 @@ struct CityView_Previews: PreviewProvider {
         let city = CityViewModel(city: SearchView_Previews.debugList()[0])
         return CityView(city: city)
             .environmentObject(Store())
-            .background(Color.black)
     }
 }

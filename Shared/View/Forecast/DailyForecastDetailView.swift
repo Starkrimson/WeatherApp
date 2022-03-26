@@ -16,6 +16,8 @@ struct DailyForecastDetailView: View {
             }
     }
     
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass: UserInterfaceSizeClass?
+    
     var body: some View {
         let weather = daily.weather.first
         VStack(alignment: .leading) {
@@ -29,13 +31,16 @@ struct DailyForecastDetailView: View {
                     Text(weather?.description.capitalized ?? "")
                         .font(.title2)
                         .fontWeight(.medium)
-                    Text("The high will be \(daily.temp.max?.celsius ?? ""), the low will be \(daily.temp.min?.celsius ?? "").")
+                    Text("The high will be \(daily.temp.max?.celsius ?? ""),\(horizontalSizeClass == .compact ? "\n" : " ")the low will be \(daily.temp.min?.celsius ?? "").")
                 }
             }
             HStack {
-                Divider()
-                    .background(Color(.systemRed))
-                    .padding(.leading, 10)
+                if horizontalSizeClass == .regular {
+                    Divider()
+                        .background(Color(.systemRed))
+                        .padding(.leading, 10)
+                        .padding(.trailing, 20)
+                }
                 WeatherItems(
                     rain: daily.rain,
                     snow: daily.snow,
@@ -45,23 +50,24 @@ struct DailyForecastDetailView: View {
                     uvi: daily.uvi,
                     dewPoint: daily.dew_point,
                     visibility: nil)
-                    .padding(.leading, 20)
             }
                 .frame(height: 50)
                 .padding(.bottom, 20)
-            HStack(alignment: .bottom) {
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("TEMPERATURE")
-                        .footnote()
-                    Text("FEELS LIKE")
-                        .footnote()
-                }
-                ForEach(temps, id: \.0) { item in
-                    VStack(alignment: .trailing) {
-                        Text(item.0)
-                        Text(item.1)
-                        Text(item.2)
-                    }.frame(width: 100)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(alignment: .bottom) {
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text("TEMPERATURE")
+                            .footnote()
+                        Text("FEELS LIKE")
+                            .footnote()
+                    }
+                    ForEach(temps, id: \.0) { item in
+                        VStack(alignment: .trailing) {
+                            Text(item.0)
+                            Text(item.1)
+                            Text(item.2)
+                        }.frame(width: 100)
+                    }
                 }
             }
                 .padding(.bottom, 20)

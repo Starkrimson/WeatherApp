@@ -28,12 +28,15 @@ struct WeatherItems: View {
             HStack(spacing: 20) {
                 Text("Humidity: \(humidity)%")
                 Text("UV: \(uvi.toString)")
-                Text("Dew point: \(dewPoint.celsius)")
             }
             
-            if let visibility = visibility {
-                Text("Visibility: \((visibility / 1000).toString(maximumFractionDigits: 1))km")
+            HStack(spacing: 20) {
+                Text("Dew point: \(dewPoint.celsius)")
+                if let visibility = visibility {
+                    Text("Visibility: \((visibility / 1000).toString(maximumFractionDigits: 1))km")
+                }
             }
+            
         }
     }
 }
