@@ -4,11 +4,12 @@
 
 一个天气 App，可搜索、关注城市，查看城市详细天气预报。
 
+
 由 SwiftUI 驱动的跨平台 app，包括 UI 布局、状态管理、网络数据获取和本地数据存储等等。
 
 编译环境：macOS 12.0.1, Xcode 13.3, iOS 15.4
 
-![](./preview.mp4)
+https://user-images.githubusercontent.com/16103570/160243859-863413ce-c1ca-4775-8c56-3a322cef9f30.mp4
 
 ### 分栏和导航
 
