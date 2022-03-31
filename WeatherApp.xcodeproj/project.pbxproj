@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		09F8E53427F5B17B00F8CF9E /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = 09F8E53327F5B17B00F8CF9E /* ComposableArchitecture */; };
+		09F8E53627F5B1B400F8CF9E /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = 09F8E53527F5B1B400F8CF9E /* ComposableArchitecture */; };
 		2DD4A03FD8DF6E69B087B19C /* OneCallModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DD4A0AAEC3309B973D7B85C /* OneCallModel.swift */; };
 		2DD4A0A577AA10EDDE79CAFA /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DD4A3C416A47F0FD3A9369D /* Store.swift */; };
 		2DD4A0B3D945C615C3A9F8AB /* CityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DD4ADEE73AD1523C7D58AF7 /* CityView.swift */; };
@@ -80,6 +82,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				09F8E53427F5B17B00F8CF9E /* ComposableArchitecture in Frameworks */,
 				5CADBF7927E8E16D006BEF44 /* Kingfisher in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -88,6 +91,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				09F8E53627F5B1B400F8CF9E /* ComposableArchitecture in Frameworks */,
 				5CCEE9C627E86547007428C2 /* Kingfisher in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -270,6 +274,7 @@
 			name = "WeatherApp (iOS)";
 			packageProductDependencies = (
 				5CADBF7827E8E16D006BEF44 /* Kingfisher */,
+				09F8E53327F5B17B00F8CF9E /* ComposableArchitecture */,
 			);
 			productName = "WeatherApp (iOS)";
 			productReference = 5CB711D627E72AE200876C83 /* WeatherApp.app */;
@@ -290,6 +295,7 @@
 			name = "WeatherApp (macOS)";
 			packageProductDependencies = (
 				5CCEE9C527E86547007428C2 /* Kingfisher */,
+				09F8E53527F5B1B400F8CF9E /* ComposableArchitecture */,
 			);
 			productName = "WeatherApp (macOS)";
 			productReference = 5CB711DC27E72AE200876C83 /* WeatherApp.app */;
@@ -324,7 +330,8 @@
 			);
 			mainGroup = 5CB711C927E72AE100876C83;
 			packageReferences = (
-				5CCEE9C427E86547007428C2 /* XCRemoteSwiftPackageReference "Kingfisher.git" */,
+				5CCEE9C427E86547007428C2 /* XCRemoteSwiftPackageReference "Kingfisher" */,
+				09AA1EB327F5A7B50052FC48 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */,
 			);
 			productRefGroup = 5CB711D727E72AE200876C83 /* Products */;
 			projectDirPath = "";
@@ -690,7 +697,15 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		5CCEE9C427E86547007428C2 /* XCRemoteSwiftPackageReference "Kingfisher.git" */ = {
+		09AA1EB327F5A7B50052FC48 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-composable-architecture";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+		5CCEE9C427E86547007428C2 /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/onevcat/Kingfisher.git";
 			requirement = {
@@ -701,14 +716,24 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		09F8E53327F5B17B00F8CF9E /* ComposableArchitecture */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 09AA1EB327F5A7B50052FC48 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */;
+			productName = ComposableArchitecture;
+		};
+		09F8E53527F5B1B400F8CF9E /* ComposableArchitecture */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 09AA1EB327F5A7B50052FC48 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */;
+			productName = ComposableArchitecture;
+		};
 		5CADBF7827E8E16D006BEF44 /* Kingfisher */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 5CCEE9C427E86547007428C2 /* XCRemoteSwiftPackageReference "Kingfisher.git" */;
+			package = 5CCEE9C427E86547007428C2 /* XCRemoteSwiftPackageReference "Kingfisher" */;
 			productName = Kingfisher;
 		};
 		5CCEE9C527E86547007428C2 /* Kingfisher */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 5CCEE9C427E86547007428C2 /* XCRemoteSwiftPackageReference "Kingfisher.git" */;
+			package = 5CCEE9C427E86547007428C2 /* XCRemoteSwiftPackageReference "Kingfisher" */;
 			productName = Kingfisher;
 		};
 /* End XCSwiftPackageProductDependency section */
