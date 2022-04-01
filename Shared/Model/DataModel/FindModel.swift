@@ -7,13 +7,17 @@ struct Find: Codable {
     var count: Int
     var list: [City]
 
-    struct City: Codable, Identifiable {
+    struct City: Codable, Equatable, Identifiable {
         var id: Int
         var name: String
         var coord: Coord
         var main: Main
         var sys: Sys
         var weather: [Forecast.Condition]
+    
+        static func ==(lhs: Find.City, rhs: Find.City) -> Bool {
+            lhs.id == rhs.id
+        }
     }
 }
 

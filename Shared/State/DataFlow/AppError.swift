@@ -1,10 +1,14 @@
 import Foundation
 
-enum AppError: Error, Identifiable {
+enum AppError: Error, Equatable, Identifiable {
     var id: String { localizedDescription }
 
     case badURL
     case networkingFailed(Error)
+    
+    static func ==(lhs: AppError, rhs: AppError) -> Bool {
+        lhs.id == rhs.id
+    }
 }
 
 extension AppError: LocalizedError {
