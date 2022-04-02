@@ -3,12 +3,16 @@ import Foundation
 ///
 /// [one-call-parameter](https://openweathermap.org/api/one-call-api#parameter)
 ///
-struct OneCall: Codable {
+struct OneCall: Codable, Equatable {
     var lat: Double
     var lon: Double
     var current: Forecast
     var hourly: [Forecast]
     var daily: [DailyForecast]
+    
+    static func == (lhs: OneCall, rhs: OneCall) -> Bool {
+        (lhs.lat, lhs.lon) == (rhs.lat, rhs.lon)
+    }
 }
 
 struct Forecast: Codable, Identifiable {
