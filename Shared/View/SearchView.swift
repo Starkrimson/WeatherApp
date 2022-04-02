@@ -5,16 +5,23 @@ import Kingfisher
 struct SearchView: View {
     let store: Store<WeatherState, WeatherAction>
     
+    var searchStore: Store<SearchState, SearchAction> {
+        store.scope(state: \.search,
+                                  action: WeatherAction.search)
+    }
+    
+    var forecastStore: Store<ForecastState, ForecastAction> {
+        store.scope(state: \.forecast,
+                                   action: WeatherAction.forecast)
+    }
+    
     var body: some View {
-        WithViewStore(store.scope(state: \.search,
-                                  action: WeatherAction.search)) { viewStore in
+        WithViewStore(searchStore) { viewStore in
             NavigationView {
                 List {
-                    SearchSection(viewStore: viewStore)
-                    WithViewStore(store.scope(state: \.forecast,
-                                              action: WeatherAction.forecast)) { viewStore in
-                        FollowingSection(viewStore: viewStore)
-                    }
+                    SearchSection(viewStore: viewStore,
+                                  forecastStore: forecastStore)
+                    FollowingSection(store: forecastStore)
                 }
                 .listStyle(.sidebar)
                 .navigationTitle("天气")
@@ -54,7 +61,7 @@ struct SearchView_Previews: PreviewProvider {
         let store = Store(
             initialState: WeatherState(search: .init(searchQuery: "preview",
                                                      list: debugList()),
-                                       forecast: .init(followingList: debugList().map(CityViewModel.init))),
+                                       forecast: .init()),
             reducer: weatherReducer,
             environment: WeatherEnvironment(
                 mainQueue: .main,
@@ -81,6 +88,7 @@ private extension Text {
 
 struct SearchSection: View {
     let viewStore: ViewStore<SearchState, SearchAction>
+    let forecastStore: Store<ForecastState, ForecastAction>
     
     var body: some View {
         switch (viewStore.status, viewStore.searchQuery.count) {
@@ -91,7 +99,10 @@ struct SearchSection: View {
         case (.normal, _) where viewStore.list.count > 0:
             Section(header: Text("搜索结果").headerText()) {
                 ForEach(viewStore.list) { city in
-                    NavigationLink(destination: CityView(city: CityViewModel(city: city))) {
+                    NavigationLink(destination: CityView(
+                        store: forecastStore,
+                        city: CityViewModel(city: city))
+                    ) {
                         CityRow(city: city)
                     }
                 }
@@ -102,26 +113,31 @@ struct SearchSection: View {
 }
 
 struct FollowingSection: View {
-    let viewStore: ViewStore<ForecastState, ForecastAction>
+    let store: Store<ForecastState, ForecastAction>
     
     var body: some View {
-        Section(header: Text("关注").headerText()) {
-            ForEach(viewStore.followingList ?? []) { city in
-                NavigationLink(destination: CityView(city: city)) {
-                    HStack {
-                        Text(city.description)
-                            .font(.headline)
-                        Spacer()
-                        KFImage(city.country.flagURL)
+        WithViewStore(store) { viewStore in
+            Section(header: Text("关注").headerText()) {
+                ForEach(viewStore.followingList ?? []) { city in
+                    NavigationLink(destination: CityView(
+                        store: store,
+                        city: city)
+                    ) {
+                        HStack {
+                            Text(city.description)
+                                .font(.headline)
+                            Spacer()
+                            KFImage(city.country.flagURL)
+                        }
                     }
                 }
-            }
                 .onDelete { (indexSet: IndexSet) in
                     viewStore.send(.unfollowCity(indexSet: indexSet))
                 }
                 .onMove { set, i in
                     viewStore.send(.moveCity(indexSet: set, toIndex: i))
                 }
+            }
         }
     }
 }

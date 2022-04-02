@@ -2,10 +2,15 @@ import Foundation
 import ComposableArchitecture
 
 struct ForecastState: Equatable {
+    @FileStorage(directory: .documentDirectory, fileName: "followingList.json")
     var followingList: [CityViewModel]?
     
     var forecast: [Int: OneCall]?
     var loadingCityIDSet: Set<Int> = []
+    
+    static func == (lhs: ForecastState, rhs: ForecastState) -> Bool {
+        (lhs.followingList, lhs.forecast, lhs.loadingCityIDSet) == (rhs.followingList, rhs.forecast, rhs.loadingCityIDSet)
+    }
 }
 
 enum ForecastAction: Equatable {

@@ -1,45 +1,45 @@
 import SwiftUI
 import Kingfisher
+import ComposableArchitecture
 
 struct CityView: View {
-    @EnvironmentObject var store: AppStore
+    let store: Store<ForecastState, ForecastAction>
     let city: CityViewModel
-    
-    var forecast: OneCall? {
-        store.appState.cityList.forecast?[city.id]
-    }
-    
+        
     @State private var selectedDailyIndex: Int = 0
     
     var body: some View {
-        ScrollView(.vertical) {
-            if let forecast = forecast {
-                VStack(alignment: .leading) {
-                    CurrentView(current: forecast.current)
-                    HourlyView(hourly: forecast.hourly)
-                    DailyView(daily: forecast.daily, selectedDailyIndex: $selectedDailyIndex)
+        WithViewStore(store) { viewStore in
+            let forecast = viewStore.forecast?[city.id]
+            ScrollView(.vertical) {
+                if let forecast = forecast {
+                    VStack(alignment: .leading) {
+                        CurrentView(current: forecast.current)
+                        HourlyView(hourly: forecast.hourly)
+                        DailyView(daily: forecast.daily, selectedDailyIndex: $selectedDailyIndex)
+                    }
+                        .padding(.leading, 21)
+                        .padding(.bottom, 20)
                 }
-                    .padding(.leading, 21)
-                    .padding(.bottom, 20)
             }
+                .ignoresSafeArea(edges: .bottom)
+                .onAppear {
+                    if forecast == nil || (Date().timeIntervalSince1970 - Double(forecast!.current.dt)) > 600 {
+                        viewStore.send(.loadCityForecast(city: city))
+                    }
+                }
+                .navigationTitle(city.description)
+                .navigationBarTitleDisplayMode(.large)
+                .navigationBarItems(trailing: Button(action: {
+                    viewStore.send(.follow(city: city))
+                }) {
+                    if viewStore.followingList?.contains(where: { $0.id == city.id }) == true {
+                        EmptyView()
+                    } else {
+                        Image(systemName: "star")
+                    }
+                })
         }
-            .ignoresSafeArea(edges: .bottom)
-            .onAppear {
-                if forecast == nil || (Date().timeIntervalSince1970 - Double(forecast!.current.dt)) > 600 {
-                    store.dispatch(.loadCityForecast(city: city))
-                }
-            }
-            .navigationTitle(city.description)
-            .navigationBarTitleDisplayMode(.large)
-            .navigationBarItems(trailing: Button(action: {
-                store.dispatch(.follow(city: city))
-            }) {
-                if store.appState.cityList.isFollowing(city.id) {
-                    EmptyView()
-                } else {
-                    Image(systemName: "star")
-                }
-            })
     }
 }
 
@@ -197,7 +197,11 @@ private struct DailyView: View {
 struct CityView_Previews: PreviewProvider {
     static var previews: some View {
         let city = CityViewModel(city: SearchView_Previews.debugList()[0])
-        return CityView(city: city)
-            .environmentObject(AppStore())
+        return CityView(
+            store: .init(initialState: .init(),
+                         reducer: forecastReducer,
+                         environment: ForecastEnvironment(mainQueue: .main,
+                                                          weatherClient: .live)),
+                        city: city)
     }
 }
