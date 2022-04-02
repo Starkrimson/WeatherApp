@@ -5,6 +5,7 @@ struct ForecastState: Equatable {
     @FileStorage(directory: .documentDirectory, fileName: "followingList.json")
     var followingList: [CityViewModel]?
     
+    @FileStorage(directory: .cachesDirectory, fileName: "forecast.json")
     var forecast: [Int: OneCall]?
     var loadingCityIDSet: Set<Int> = []
     
