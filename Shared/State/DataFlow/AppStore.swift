@@ -1,7 +1,7 @@
 import Foundation
 import Combine
 
-class Store: ObservableObject {
+class AppStore: ObservableObject {
 
     @Published var appState = AppState()
     
@@ -26,7 +26,7 @@ class Store: ObservableObject {
         #if DEBUG
         print("[ACTION]: \(action)")
         #endif
-        let result = Store.reduce(state: appState, action: action)
+        let result = AppStore.reduce(state: appState, action: action)
         appState = result.0
         if let command = result.1 {
             #if DEBUG

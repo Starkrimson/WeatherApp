@@ -2,12 +2,12 @@ import Foundation
 import Combine
 
 protocol AppCommand {
-    func execute(in store: Store)
+    func execute(in store: AppStore)
 }
 
 struct FindAppCommand: AppCommand {
 
-    func execute(in store: Store) {
+    func execute(in store: AppStore) {
         let token = SubscriptionToken()
 
         FindRequest(keyword: store.appState.search.keyword)
@@ -27,7 +27,7 @@ struct FindAppCommand: AppCommand {
 struct OneCallCommand: AppCommand {
     let city: CityViewModel
     
-    func execute(in store: Store) {
+    func execute(in store: AppStore) {
         let token = SubscriptionToken()
         
         OneCallRequest(lat: city.coord.lat, lon: city.coord.lon)

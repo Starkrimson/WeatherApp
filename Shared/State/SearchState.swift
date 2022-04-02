@@ -3,7 +3,7 @@ import ComposableArchitecture
 
 struct SearchState: Equatable {
     
-    var searchQuery = ""
+    @BindableState var searchQuery = ""
     var list: [Find.City] = []
     var status: Status = .normal
     
@@ -12,7 +12,8 @@ struct SearchState: Equatable {
     }
 }
 
-enum SearchAction: Equatable {
+enum SearchAction: Equatable, BindableAction {
+    case binding(BindingAction<SearchState>)
     case search(query: String)
     case citiesResponse(Result<[Find.City], AppError>)
     case clearSearch
@@ -25,13 +26,20 @@ struct SearchEnvironment {
 
 let searchReducer = Reducer<SearchState, SearchAction, SearchEnvironment> {
     state, action, environment in
-
+    
     switch action {
+    case .binding:
+        return .none
     case .search(let query):
+        struct SearchCityId: Hashable { }
+        
         state.status = .loading
         return environment.weatherClient
             .searchCity(query)
+            .receive(on: environment.mainQueue)
             .catchToEffect(SearchAction.citiesResponse)
+            .cancellable(id: SearchCityId(), cancelInFlight: true)
+        
     case .citiesResponse(let result):
         switch result {
         case .success(let list):
@@ -49,3 +57,5 @@ let searchReducer = Reducer<SearchState, SearchAction, SearchEnvironment> {
         return .none
     }
 }
+    .binding()
+    .debug()

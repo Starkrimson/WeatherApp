@@ -4,8 +4,13 @@ import SwiftUI
 struct WeatherApp: App {
     var body: some Scene {
         WindowGroup {
-            SearchView()
-                .environmentObject(Store())
+            SearchView(
+                store: .init(
+                    initialState: .init(),
+                    reducer: weatherReducer,
+                    environment: WeatherEnvironment(mainQueue: .main, weatherClient: .live)
+                )
+            )
                 .withHostingWindow { window in
                     #if targetEnvironment(macCatalyst)
                     if let titleBar = window?.windowScene?.titlebar {

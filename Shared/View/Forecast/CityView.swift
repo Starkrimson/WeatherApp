@@ -2,7 +2,7 @@ import SwiftUI
 import Kingfisher
 
 struct CityView: View {
-    @EnvironmentObject var store: Store
+    @EnvironmentObject var store: AppStore
     let city: CityViewModel
     
     var forecast: OneCall? {
@@ -198,6 +198,6 @@ struct CityView_Previews: PreviewProvider {
     static var previews: some View {
         let city = CityViewModel(city: SearchView_Previews.debugList()[0])
         return CityView(city: city)
-            .environmentObject(Store())
+            .environmentObject(AppStore())
     }
 }
