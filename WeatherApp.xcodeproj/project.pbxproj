@@ -54,6 +54,8 @@
 		5CB711E027E72AE200876C83 /* WeatherApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CB711CF27E72AE100876C83 /* WeatherApp.swift */; };
 		5CB711E327E72AE200876C83 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5CB711D127E72AE200876C83 /* Assets.xcassets */; };
 		5CB711E427E72AE200876C83 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5CB711D127E72AE200876C83 /* Assets.xcassets */; };
+		5CC3DB1D27F7E4A7007B1AA7 /* ForecastState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CC3DB1C27F7E4A7007B1AA7 /* ForecastState.swift */; };
+		5CC3DB1E27F7E4A7007B1AA7 /* ForecastState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CC3DB1C27F7E4A7007B1AA7 /* ForecastState.swift */; };
 		5CCEE9C627E86547007428C2 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 5CCEE9C527E86547007428C2 /* Kingfisher */; };
 /* End PBXBuildFile section */
 
@@ -95,6 +97,7 @@
 		5CB711D627E72AE200876C83 /* WeatherApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WeatherApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5CB711DC27E72AE200876C83 /* WeatherApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WeatherApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5CB711DE27E72AE200876C83 /* macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = macOS.entitlements; sourceTree = "<group>"; };
+		5CC3DB1C27F7E4A7007B1AA7 /* ForecastState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecastState.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -157,6 +160,7 @@
 				2DD4AF8DCD6F5A558420AF85 /* Networking */,
 				2DD4A342F32EBFD36E838806 /* FileIO */,
 				589A219D0C60D6D2BF0D79BF /* SearchState.swift */,
+				5CC3DB1C27F7E4A7007B1AA7 /* ForecastState.swift */,
 			);
 			path = State;
 			sourceTree = "<group>";
@@ -459,6 +463,7 @@
 				2DD4A03FD8DF6E69B087B19C /* OneCallModel.swift in Sources */,
 				2DD4A4E519D1B2D0B72A0A15 /* AppError.swift in Sources */,
 				2DD4A2B42A3BBEBB1DCEE15F /* OneCallRequest.swift in Sources */,
+				5CC3DB1D27F7E4A7007B1AA7 /* ForecastState.swift in Sources */,
 				2DD4A5681EFA062E6386137C /* FindModel.swift in Sources */,
 				2DD4A49CAFAC01016694FAD6 /* SearchView.swift in Sources */,
 				2DD4A2C3C7392797FB2D97C0 /* CityViewModel.swift in Sources */,
@@ -485,6 +490,7 @@
 				2DD4AB09F382F6374C636728 /* OneCallModel.swift in Sources */,
 				2DD4A5BDF07C5B9F6FC023C5 /* AppError.swift in Sources */,
 				2DD4A0FC2C0ED54B630A9CAD /* OneCallRequest.swift in Sources */,
+				5CC3DB1E27F7E4A7007B1AA7 /* ForecastState.swift in Sources */,
 				2DD4A47929C6DEEBD65D7B3B /* FindModel.swift in Sources */,
 				2DD4A4BB1E142A984DDDA99E /* SearchView.swift in Sources */,
 				2DD4A90C0BF3A4601BCD6957 /* CityViewModel.swift in Sources */,

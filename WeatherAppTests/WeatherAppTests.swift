@@ -32,7 +32,6 @@ class WeatherAppTests: XCTestCase {
         store.environment.weatherClient.searchCity = { _ in Effect(value: mockCities) }
         store.send(.search(query: "Beijing")) {
             $0.status = .loading
-            $0.searchQuery = "Beijing"
         }
         scheduler.advance(by: 0.3)
         store.receive(.citiesResponse(.success(mockCities))) {
@@ -59,11 +58,43 @@ class WeatherAppTests: XCTestCase {
         store.environment.weatherClient.searchCity = { _ in Effect(error: .badURL) }
         store.send(.search(query: "S")) {
             $0.status = .loading
-            $0.searchQuery = "S"
         }
         scheduler.advance(by: 0.3)
         store.receive(.citiesResponse(.failure(.badURL))) {
             $0.status = .failed("无效 URL")
+        }
+    }
+    
+    func testFollowAndUnfollowCity() {
+        let store = TestStore(
+            initialState: .init(),
+            reducer: forecastReducer,
+            environment: ForecastEnvironment(
+                mainQueue: scheduler.eraseToAnyScheduler()
+            )
+        )
+        
+        store.send(.follow(city: CityViewModel(city: mockCities[0]))) {
+            $0.followingList = [CityViewModel(city: mockCities[0])]
+        }
+        
+        store.send(.unfollowCity(indexSet: IndexSet(integer: 0))) {
+            $0.followingList = []
+        }
+    }
+    
+    func testMoveCity() {
+        let store = TestStore(
+            initialState: .init(followingList: mockCities.map(CityViewModel.init)),
+            reducer: forecastReducer,
+            environment: ForecastEnvironment(
+                mainQueue: scheduler.eraseToAnyScheduler()
+            )
+        )
+        store.send(.moveCity(indexSet: IndexSet(integer: 1), toIndex: 0)) { state in
+            var list = mockCities.map(CityViewModel.init)
+            list.move(fromOffsets: IndexSet(integer: 1), toOffset: 0)
+            state.followingList = list
         }
     }
 }

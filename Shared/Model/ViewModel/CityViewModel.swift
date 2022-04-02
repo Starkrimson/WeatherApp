@@ -1,6 +1,6 @@
 import Foundation
 
-struct CityViewModel: Codable, Identifiable, CustomStringConvertible {
+struct CityViewModel: Codable, Identifiable, CustomStringConvertible, Equatable {
     
     init(city: Find.City) {
         self.city = city
