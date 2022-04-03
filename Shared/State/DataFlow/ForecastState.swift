@@ -48,9 +48,11 @@ let forecastReducer = Reducer<ForecastState, ForecastAction, ForecastEnvironment
         state.followingList = list
         return .none
     case .loadCityForecast(city: let city):
+        guard !state.loadingCityIDSet.contains(city.id) else { return .none }
         state.loadingCityIDSet.insert(city.id)
         return environment.weatherClient
             .oneCall(city.coord.lat, city.coord.lon)
+            .receive(on: environment.mainQueue)
             .catchToEffect { result in
                 ForecastAction.loadCityForecastDone(cityID: city.id, result: result)
             }

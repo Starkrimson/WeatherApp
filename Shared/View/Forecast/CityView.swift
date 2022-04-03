@@ -198,10 +198,13 @@ struct CityView_Previews: PreviewProvider {
     static var previews: some View {
         let city = CityViewModel(city: SearchView_Previews.debugList()[0])
         return CityView(
-            store: .init(initialState: .init(),
-                         reducer: forecastReducer,
-                         environment: ForecastEnvironment(mainQueue: .main,
-                                                          weatherClient: .live)),
-                        city: city)
+            store: .init(
+                initialState: .init(),
+                reducer: forecastReducer,
+                environment: ForecastEnvironment(
+                    mainQueue: .main,
+                    weatherClient: .live)
+            ),
+            city: city)
     }
 }

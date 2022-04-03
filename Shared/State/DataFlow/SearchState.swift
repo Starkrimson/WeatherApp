@@ -16,7 +16,6 @@ enum SearchAction: Equatable, BindableAction {
     case binding(BindingAction<SearchState>)
     case search(query: String)
     case citiesResponse(Result<[Find.City], AppError>)
-    case clearSearch
 }
 
 struct SearchEnvironment {
@@ -28,11 +27,18 @@ let searchReducer = Reducer<SearchState, SearchAction, SearchEnvironment> {
     state, action, environment in
     
     switch action {
-    case .binding:
+    case .binding(let action):
+        customDump(action, name: "binding action")
+        if action.keyPath == \.$searchQuery, state.searchQuery.count == 0 {
+            customDump("search query empty \(state.searchQuery)", name: "binding action")
+            state.status = .normal
+            state.list = []
+        }
         return .none
     case .search(let query):
         struct SearchCityId: Hashable { }
         
+        guard state.status != .loading else { return .none }
         state.status = .loading
         return environment.weatherClient
             .searchCity(query)
@@ -49,11 +55,6 @@ let searchReducer = Reducer<SearchState, SearchAction, SearchEnvironment> {
             state.status = .failed(error.localizedDescription)
             state.list = []
         }
-        return .none
-    case .clearSearch:
-        state.searchQuery = ""
-        state.status = .normal
-        state.list = []
         return .none
     }
 }

@@ -31,8 +31,8 @@ class WeatherAppTests: XCTestCase {
             $0.status = .normal
             $0.list = mockCities
         }
-        
-        store.send(.clearSearch) {
+                
+        store.send(.binding(.set(\.$searchQuery, ""))) {
             $0.searchQuery = ""
             $0.status = .normal
             $0.list = []
@@ -79,13 +79,22 @@ class WeatherAppTests: XCTestCase {
     
     func testMoveCity() {
         let store = TestStore(
-            initialState: .init(followingList: mockCities.map(CityViewModel.init)),
+            initialState: .init(),
             reducer: forecastReducer,
             environment: ForecastEnvironment(
                 mainQueue: scheduler.eraseToAnyScheduler(),
                 weatherClient: .failing
             )
         )
+        
+        store.send(.follow(city: CityViewModel(city: mockCities[0]))) {
+            $0.followingList = [CityViewModel(city: mockCities[0])]
+        }
+        
+        store.send(.follow(city: CityViewModel(city: mockCities[1]))) {
+            $0.followingList?.append(CityViewModel(city: mockCities[1]))
+        }
+        
         store.send(.moveCity(indexSet: IndexSet(integer: 1), toIndex: 0)) { state in
             var list = mockCities.map(CityViewModel.init)
             list.move(fromOffsets: IndexSet(integer: 1), toOffset: 0)
