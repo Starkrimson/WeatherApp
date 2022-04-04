@@ -58,7 +58,7 @@ class WeatherAppTests: XCTestCase {
         }
     }
     
-    func testFollowAndUnfollowCity() {
+    func testFollowingCity() {
         let store = TestStore(
             initialState: .init(),
             reducer: forecastReducer,
@@ -69,36 +69,22 @@ class WeatherAppTests: XCTestCase {
         )
         
         store.send(.follow(city: CityViewModel(city: mockCities[0]))) {
-            $0.followingList = [CityViewModel(city: mockCities[0])]
-        }
-        
-        store.send(.unfollowCity(indexSet: IndexSet(integer: 0))) {
-            $0.followingList = []
-        }
-    }
-    
-    func testMoveCity() {
-        let store = TestStore(
-            initialState: .init(),
-            reducer: forecastReducer,
-            environment: ForecastEnvironment(
-                mainQueue: scheduler.eraseToAnyScheduler(),
-                weatherClient: .failing
-            )
-        )
-        
-        store.send(.follow(city: CityViewModel(city: mockCities[0]))) {
-            $0.followingList = [CityViewModel(city: mockCities[0])]
+            var list = $0.followingList ?? []
+            list.append(CityViewModel(city: mockCities[0]))
+            $0.followingList =  list
         }
         
         store.send(.follow(city: CityViewModel(city: mockCities[1]))) {
             $0.followingList?.append(CityViewModel(city: mockCities[1]))
         }
         
-        store.send(.moveCity(indexSet: IndexSet(integer: 1), toIndex: 0)) { state in
-            var list = mockCities.map(CityViewModel.init)
-            list.move(fromOffsets: IndexSet(integer: 1), toOffset: 0)
-            state.followingList = list
+        store.send(.moveCity(indexSet: IndexSet(integer: 1), toIndex: 0)) {
+            let city = $0.followingList!.remove(at: 1)
+            $0.followingList?.insert(city, at: 0)
+        }
+        
+        store.send(.unfollowCity(indexSet: IndexSet(integer: 0))) {
+            $0.followingList?.remove(at: 0)
         }
     }
     
