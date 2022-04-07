@@ -125,17 +125,27 @@ NavigationView {
 ### 网络请求
 
 ```swift
-struct FindRequest: AppRequest {
-    
-    var publisher: AnyPublisher<Find, AppError> {
-        URLSession.shared
-            .dataTaskPublisher(for: url)
-            .map { $0.data }
-            .decode(type: Find.self, decoder: JSONDecoder())
-            .mapError { AppError.networkingFailed($0) }
-            .eraseToAnyPublisher()
-    }
+struct WeatherClient {
+    var searchCity: (String) -> Effect<[Find.City], AppError>
 }
+
+extension WeatherClient {
+    static let live = WeatherClient(
+        searchCity: { query in
+            guard let q = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+                  let url = URL(string: "https://openweathermap.org/data/2.5/find?q=\(q)&appid=\(appid)&units=metric")
+                else {
+                return Effect(error: .badURL)
+            }
+            
+            return URLSession.shared.dataTaskPublisher(for: url)
+                .map { $0.data }
+                .decode(type: Find.self, decoder: JSONDecoder())
+                .map { $0.list }
+                .mapError { AppError.networkingFailed($0) }
+                .eraseToEffect()
+        }
+    )
 ```
 
 ### 屏幕适配
