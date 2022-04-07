@@ -105,7 +105,9 @@ class WeatherAppTests: XCTestCase {
         scheduler.advance(by: 0.3)
         store.receive(.loadCityForecastDone(cityID: mockCities[0].id, result: .success(mockOneCall))) {
             $0.loadingCityIDSet = []
-            $0.forecast = [mockCities[0].id: mockOneCall]
+            var forecast = $0.forecast ?? [:]
+            forecast[mockCities[0].id] = mockOneCall
+            $0.forecast = forecast
         }
     }
     

@@ -11,6 +11,101 @@
 
 https://user-images.githubusercontent.com/16103570/160243859-863413ce-c1ca-4775-8c56-3a322cef9f30.mp4
 
+### [The Composable Architecture](https://github.com/pointfreeco/swift-composable-architecture) 可组装架构
+
+> [TCA 中文 readme](https://gist.github.com/sh3l6orrr/10c8f7c634a892a9c37214f3211242ad)
+
+* State：即状态，是一个用于描述某个功能的执行逻辑，和渲染界面所需的数据的类。
+
+```swift
+struct SearchState: Equatable {
+    @BindableState var searchQuery = ""
+    var list: [Find.City] = []
+}
+```
+
+* Action：一个代表在功能中所有可能的动作的类，如用户的行为、提醒，和事件源等。
+
+```swift
+enum SearchAction: Equatable, BindableAction {
+    case binding(BindingAction<SearchState>)
+    case search(query: String)
+    case citiesResponse(Result<[Find.City], AppError>)
+}
+```
+
+* Environment：一个包含功能的依赖的类，如API客户端，分析客户端等。
+
+```swift
+struct SearchEnvironment {
+    var mainQueue: AnySchedulerOf<DispatchQueue>
+    var weatherClient: WeatherClient
+}
+```
+
+* Reducer：一个用于描述触发「Action」时，如何从当前状态（state）变化到下一个状态的函数，它同时负责返回任何需要被执行的「Effect」，如API请求（通过返回一个「Effect」实例来完成）。
+
+```swift
+
+let searchReducer = Reducer<SearchState, SearchAction, SearchEnvironment> {
+    state, action, environment in
+    
+    switch action {
+    case .binding:
+        return .none
+    case .search(let query):
+        struct SearchCityId: Hashable { }
+        
+        return environment.weatherClient
+            .searchCity(query)
+            .receive(on: environment.mainQueue)
+            .catchToEffect(SearchAction.citiesResponse)
+            .cancellable(id: SearchCityId(), cancelInFlight: true)
+        
+    case .citiesResponse(let result):
+        switch result {
+        case .success(let list):
+            state.list = list
+        case .failure(let error):
+            state.list = []
+        }
+        return .none
+    }
+}
+    .binding()
+    .debug()
+```
+
+* Store：用于驱动某个功能的运行时（runtime）。将所有用户行为发送到「Store」中，令它运行「Reducer」和「Effects」。同时从「Store」中观测「State」，以更新UI。
+
+```swift
+SearchView(
+    store: .init(
+        initialState: .init(),
+        reducer: weatherReducer,
+        environment: WeatherEnvironment(mainQueue: .main, weatherClient: .live)
+    )
+)
+```
+
+```swift
+struct SearchView: View {
+    let store: Store<WeatherState, WeatherAction>
+    
+    var body: some View {
+        WithViewStore(searchStore) { viewStore in
+            List(viewStore.list) { item in
+                Cell(...)
+            }
+            .searchable(text: viewStore.binding(\.$searchQuery))
+            .onSubmit(of: .search) {
+                viewStore.send(.search(query: viewStore.searchQuery))
+            }
+        }
+    }
+}
+```
+
 ### 分栏和导航
 
 ```swift
@@ -24,44 +119,6 @@ NavigationView {
     }
     // 第二个 view 为右侧 detail view
     Image(systemName: "cloud.sun").font(.largeTitle)
-}
-```
-
-### 状态管理
-
-**类 Redux 的架构**
-
-1. 状态决定用户界面，所有 `State` 储存在 `Store` 对象中。
-2. view **不能**直接操作 state， 只能通过发送 `Action`，Store 的 `Reducer` 处理这些 action，生成新的 state。
-3. 新的 state 会替换 store 中原有的状态，并驱动页面更新。
-4. Reducer 生成新 state 时可能会带副作用，额外返回一个 `Command`。
-5. 异步的 command 需要更改 state，也是通过 action。
-
-```swift
-class Store: ObservableObject { // 1
-    @Published var appState = AppState() // 1
-    
-    // 2
-    static func reduce(state: AppState, action: AppAction) -> (AppState, AppCommand?) {
-        var appState = state
-        var appCommand: AppCommand?
-        
-        switch action {
-            // case ...   
-        }
-        
-        // 3, 4
-        return (appState, appCommand)
-    }
-}
-```
-```swift
-struct FindAppCommand: AppCommand {
-
-    func execute(in store: Store) {
-        // await ...
-        store.dispatch(action) // 5
-    }
 }
 ```
 
@@ -109,9 +166,7 @@ var body: some View {
 
 [<img alt="openweathermap" src="https://openweathermap.org/themes/openweathermap/assets/img/logo_white_cropped.png" width="120"/>](https://openweathermap.org/) [openweathermap.org](https://openweathermap.org/)
 
-源码不含 appid，需要编译看效果可以去官网注册免费的 appid。然后赋值 `FindRequst.swift`：
+源码不含 appid，需要编译看效果可以去官网注册免费的 appid。然后赋值 `WeatherClient.swift`：
 ```swift
-extension AppRequest {
-    var appid: String { "" }
-}
+private let appid = "xxx"
 ```

@@ -28,9 +28,7 @@ let searchReducer = Reducer<SearchState, SearchAction, SearchEnvironment> {
     
     switch action {
     case .binding(let action):
-        customDump(action, name: "binding action")
         if action.keyPath == \.$searchQuery, state.searchQuery.count == 0 {
-            customDump("search query empty \(state.searchQuery)", name: "binding action")
             state.status = .normal
             state.list = []
         }
