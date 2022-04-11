@@ -18,6 +18,15 @@ struct Find: Codable {
         static func ==(lhs: Find.City, rhs: Find.City) -> Bool {
             lhs.id == rhs.id
         }
+        
+        init(with city: FollowingCity) {
+            self.id = Int(city.id)
+            self.name = city.name ?? ""
+            self.coord = .init(lat: city.lat, lon: city.lon)
+            self.sys = .init(country: city.country ?? "")
+            self.weather = []
+            self.main = .init(temp: 0, feels_like: 0)
+        }
     }
 }
 

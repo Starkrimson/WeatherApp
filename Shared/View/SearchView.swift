@@ -72,7 +72,8 @@ struct SearchView_Previews: PreviewProvider {
                         ])
                     },
                     oneCall: { _,_ in Effect(error: .badURL) }
-                )
+                ),
+                followingClient: .live
             )
         )
         return SearchView(store: store)
@@ -118,7 +119,7 @@ struct FollowingSection: View {
     var body: some View {
         WithViewStore(store) { viewStore in
             Section(header: Text("关注").headerText()) {
-                ForEach(viewStore.followingList ?? []) { city in
+                ForEach(viewStore.followingList) { city in
                     NavigationLink(destination: CityView(
                         store: store,
                         city: city)
@@ -137,6 +138,9 @@ struct FollowingSection: View {
                 .onMove { set, i in
                     viewStore.send(.moveCity(indexSet: set, toIndex: i))
                 }
+            }
+            .onAppear {
+                viewStore.send(.fetchFollowingCity)
             }
         }
     }
