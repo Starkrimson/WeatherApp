@@ -151,7 +151,8 @@ class WeatherAppTests: XCTestCase {
             environment: .init(
                 mainQueue: .immediate,
                 weatherClient: .failing,
-                followingClient: .falling
+                followingClient: .falling,
+                date: { Date(timeIntervalSince1970: 1648699300) }
             )
         )
         
@@ -176,8 +177,8 @@ class WeatherAppTests: XCTestCase {
             $0.forecast.forecast = [city.id: mockOneCall]
         }
         
-        //TODO: 再次点击城市，两次间隔不超过 600 秒，不触发刷新
-//        store.send(.search(.binding(.set(\.$selectedCity, city))))
+        // 再次点击城市，两次间隔不超过 600 秒，不触发刷新
+        store.send(.search(.binding(.set(\.$selectedCity, city))))
     }
 }
 

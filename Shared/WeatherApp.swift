@@ -8,7 +8,12 @@ struct WeatherApp: App {
                 store: .init(
                     initialState: .init(),
                     reducer: weatherReducer,
-                    environment: WeatherEnvironment(mainQueue: .main, weatherClient: .live, followingClient: .live)
+                    environment: WeatherEnvironment(
+                        mainQueue: .main,
+                        weatherClient: .live,
+                        followingClient: .live,
+                        date: Date.init
+                    )
                 )
             )
                 .withHostingWindow { window in

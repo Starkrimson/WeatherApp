@@ -84,7 +84,8 @@ struct SearchView_Previews: PreviewProvider {
                     },
                     oneCall: { _,_ in Effect(error: .badURL) }
                 ),
-                followingClient: .live
+                followingClient: .live,
+                date: Date.init
             )
         )
         return SearchView(store: store)
