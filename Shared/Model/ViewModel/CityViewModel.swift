@@ -1,7 +1,7 @@
 import Foundation
 import CoreData
 
-struct CityViewModel: Identifiable, CustomStringConvertible, Equatable {
+struct CityViewModel: Identifiable, CustomStringConvertible, Equatable, Hashable {
     
     init(city: Find.City) {
         self.city = city
@@ -25,6 +25,10 @@ struct CityViewModel: Identifiable, CustomStringConvertible, Equatable {
     
     var description: String {
         "\(name), \(country)"
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
     }
 }
 

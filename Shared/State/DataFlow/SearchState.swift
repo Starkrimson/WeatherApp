@@ -7,6 +7,8 @@ struct SearchState: Equatable {
     var list: [Find.City] = []
     var status: Status = .normal
     
+    @BindableState var selectedCity: CityViewModel? = nil
+    
     enum Status: Equatable {
         case normal, loading, noResult, failed(String)
     }
