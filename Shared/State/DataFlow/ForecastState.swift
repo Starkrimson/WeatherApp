@@ -2,21 +2,20 @@ import Foundation
 import ComposableArchitecture
 
 struct ForecastState: Equatable {
-    @FileStorage(directory: .documentDirectory, fileName: "followingList.json")
-    var followingList: [CityViewModel]?
+    var followingList: [CityViewModel] = []
     
-    @FileStorage(directory: .cachesDirectory, fileName: "forecast.json")
     var forecast: [Int: OneCall]?
     var loadingCityIDSet: Set<Int> = []
-    
-    static func == (lhs: ForecastState, rhs: ForecastState) -> Bool {
-        (lhs.followingList, lhs.forecast, lhs.loadingCityIDSet) == (rhs.followingList, rhs.forecast, rhs.loadingCityIDSet)
-    }
 }
 
 enum ForecastAction: Equatable {
+    case fetchFollowingCity
+    case fetchFollowingCityDone(Result<[CityViewModel], AppError>)
+    
     case follow(city: CityViewModel)
+    case followDone(Result<CityViewModel, Never>)
     case unfollowCity(indexSet: IndexSet)
+    case unfollowCityDone(Result<CityViewModel, Never>)
     case moveCity(indexSet: IndexSet, toIndex: Int)
     
     case loadCityForecast(city: CityViewModel)
@@ -26,27 +25,52 @@ enum ForecastAction: Equatable {
 struct ForecastEnvironment {
     var mainQueue: AnySchedulerOf<DispatchQueue>
     var weatherClient: WeatherClient
+    var followingClient: FollowingClient
 }
 
 let forecastReducer = Reducer<ForecastState, ForecastAction, ForecastEnvironment> {
     state, action, environment in
     
     switch action {
-    case .follow(let city):
-        var list = state.followingList ?? []
-        list.append(city)
-        state.followingList = list
+    case .fetchFollowingCity:
+        return environment.followingClient
+            .fetch()
+            .receive(on: environment.mainQueue)
+            .catchToEffect(ForecastAction.fetchFollowingCityDone)
+    case .fetchFollowingCityDone(let result):
+        switch result {
+        case .success(let list):
+            state.followingList = list
+        case .failure(let error):
+            customDump(error)
+        }
+        return .none
+    case .follow(var city):
+        city.index = Int((state.followingList.last?.index ?? 0) + 1)
+        return environment.followingClient
+            .save(city)
+            .receive(on: environment.mainQueue)
+            .catchToEffect(ForecastAction.followDone)
+    case .followDone(let result):
+        if case let .success(city) = result {
+            state.followingList.append(city)
+        }
         return .none
     case .unfollowCity(let indexSet):
-        var list = state.followingList ?? []
-        list.remove(atOffsets: indexSet)
-        state.followingList = list
+        return environment.followingClient
+            .delete(state.followingList[indexSet.first!])
+            .receive(on: environment.mainQueue)
+            .catchToEffect(ForecastAction.unfollowCityDone)
+    case .unfollowCityDone(let result):
+        if case let .success(city) = result {
+            state.followingList.removeAll(where: { $0.id == city.id })
+        }
         return .none
     case let .moveCity(indexSet, toIndex):
-        var list = state.followingList ?? []
-        list.move(fromOffsets: indexSet, toOffset: toIndex)
-        state.followingList = list
-        return .none
+        return environment.followingClient
+            .move(state.followingList, indexSet, toIndex)
+            .receive(on: environment.mainQueue)
+            .catchToEffect(ForecastAction.fetchFollowingCityDone)
     case .loadCityForecast(city: let city):
         guard !state.loadingCityIDSet.contains(city.id) else { return .none }
         state.loadingCityIDSet.insert(city.id)
@@ -69,3 +93,4 @@ let forecastReducer = Reducer<ForecastState, ForecastAction, ForecastEnvironment
         return .none
     }
 }
+    .debug()

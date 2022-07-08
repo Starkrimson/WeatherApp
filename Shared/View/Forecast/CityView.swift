@@ -33,7 +33,7 @@ struct CityView: View {
                 .navigationBarItems(trailing: Button(action: {
                     viewStore.send(.follow(city: city))
                 }) {
-                    if viewStore.followingList?.contains(where: { $0.id == city.id }) == true {
+                    if viewStore.followingList.contains(where: { $0.id == city.id }) {
                         EmptyView()
                     } else {
                         Image(systemName: "star")
@@ -203,7 +203,9 @@ struct CityView_Previews: PreviewProvider {
                 reducer: forecastReducer,
                 environment: ForecastEnvironment(
                     mainQueue: .main,
-                    weatherClient: .live)
+                    weatherClient: .live,
+                    followingClient: .live
+                )
             ),
             city: city)
     }

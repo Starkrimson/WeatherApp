@@ -60,31 +60,43 @@ class WeatherAppTests: XCTestCase {
     
     func testFollowingCity() {
         let store = TestStore(
-            initialState: .init(),
+            initialState: .init(
+                followingList: mockCities.map(CityViewModel.init)
+            ),
             reducer: forecastReducer,
             environment: ForecastEnvironment(
-                mainQueue: scheduler.eraseToAnyScheduler(),
-                weatherClient: .failing
+                mainQueue: .immediate,
+                weatherClient: .failing,
+                followingClient: .falling
             )
         )
         
-        store.send(.follow(city: CityViewModel(city: mockCities[0]))) {
-            var list = $0.followingList ?? []
-            list.append(CityViewModel(city: mockCities[0]))
-            $0.followingList =  list
+        let mockList = mockCities.map(CityViewModel.init)
+        store.environment.followingClient.fetch = { Effect(value: mockList) }
+        store.send(.fetchFollowingCity)
+        store.receive(.fetchFollowingCityDone(.success(mockList))) {
+            $0.followingList = mockList
         }
         
-        store.send(.follow(city: CityViewModel(city: mockCities[1]))) {
-            $0.followingList?.append(CityViewModel(city: mockCities[1]))
+        let city = mockList[0]
+        store.environment.followingClient.delete = { _ in Effect(value: city) }
+        store.send(.unfollowCity(indexSet: IndexSet(integer: 0)))
+        store.receive(.unfollowCityDone(.success(city))) {
+            $0.followingList.remove(at: 0)
         }
         
-        store.send(.moveCity(indexSet: IndexSet(integer: 1), toIndex: 0)) {
-            let city = $0.followingList!.remove(at: 1)
-            $0.followingList?.insert(city, at: 0)
+        store.environment.followingClient.save = { _ in Effect(value: city) }
+        store.send(.follow(city: city))
+        store.receive(.followDone(.success(city))) { state in
+            state.followingList.append(city)
         }
         
-        store.send(.unfollowCity(indexSet: IndexSet(integer: 0))) {
-            $0.followingList?.remove(at: 0)
+        var moved = mockList
+        moved.move(fromOffsets: IndexSet(integer: 1), toOffset: 0)
+        store.environment.followingClient.move = { _,_,_ in Effect(value: moved) }
+        store.send(.moveCity(indexSet: IndexSet(integer: 1), toIndex: 0))
+        store.receive(.fetchFollowingCityDone(.success(moved))) {
+            $0.followingList = moved
         }
     }
     
@@ -94,10 +106,11 @@ class WeatherAppTests: XCTestCase {
             reducer: forecastReducer,
             environment: ForecastEnvironment(
                 mainQueue: scheduler.eraseToAnyScheduler(),
-                weatherClient: .failing
+                weatherClient: .failing,
+                followingClient: .falling
             )
         )
-        
+
         store.environment.weatherClient.oneCall = { _, _ in Effect(value: mockOneCall) }
         store.send(.loadCityForecast(city: CityViewModel(city: mockCities[0]))) {
             $0.loadingCityIDSet = [mockCities[0].id]
@@ -117,7 +130,8 @@ class WeatherAppTests: XCTestCase {
             reducer: forecastReducer,
             environment: ForecastEnvironment(
                 mainQueue: scheduler.eraseToAnyScheduler(),
-                weatherClient: .failing
+                weatherClient: .failing,
+                followingClient: .falling
             )
         )
         store.environment.weatherClient.oneCall = { _,_ in Effect(error: .badURL) }

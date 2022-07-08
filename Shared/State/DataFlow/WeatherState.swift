@@ -14,6 +14,7 @@ enum WeatherAction: Equatable {
 struct WeatherEnvironment {
     var mainQueue: AnySchedulerOf<DispatchQueue>
     var weatherClient: WeatherClient
+    var followingClient: FollowingClient
 }
 
 let weatherReducer = Reducer<WeatherState, WeatherAction, WeatherEnvironment>.combine(
@@ -28,7 +29,11 @@ let weatherReducer = Reducer<WeatherState, WeatherAction, WeatherEnvironment>.co
         state: \.forecast,
         action: /WeatherAction.forecast,
         environment: {
-            ForecastEnvironment(mainQueue: $0.mainQueue, weatherClient: $0.weatherClient)
+            ForecastEnvironment(
+                mainQueue: $0.mainQueue,
+                weatherClient: $0.weatherClient,
+                followingClient: $0.followingClient
+            )
         }
     )
 )
