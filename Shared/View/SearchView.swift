@@ -45,14 +45,16 @@ struct SearchView: View {
                 }
                 #endif
             } detail: {
-                IfLetStore(
-                    store.scope(state: \.search.selectedCity)
-                ) { letStore in
-                    WithViewStore(letStore) { letViewStore in
-                        CityView(store: forecastStore, city: letViewStore.state)
+                VStack {
+                    IfLetStore(
+                        store.scope(state: \.search.selectedCity)
+                    ) { letStore in
+                        WithViewStore(letStore) { letViewStore in
+                            CityView(store: forecastStore, city: letViewStore.state)
+                        }
+                    } else: {
+                        Image(systemName: "cloud.sun").font(.largeTitle)
                     }
-                } else: {
-                    Image(systemName: "cloud.sun").font(.largeTitle)
                 }
             }
         }
