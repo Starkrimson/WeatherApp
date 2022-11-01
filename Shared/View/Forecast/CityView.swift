@@ -10,35 +10,29 @@ struct CityView: View {
     
     var body: some View {
         WithViewStore(store) { viewStore in
-            let forecast = viewStore.forecast?[city.id]
             ScrollView(.vertical) {
-                if let forecast = forecast {
+                if let forecast = viewStore.forecast?[city.id] {
                     VStack(alignment: .leading) {
                         CurrentView(current: forecast.current)
                         HourlyView(hourly: forecast.hourly)
                         DailyView(daily: forecast.daily, selectedDailyIndex: $selectedDailyIndex)
                     }
-                        .padding(.leading, 21)
-                        .padding(.bottom, 20)
+                    .padding(.leading, 21)
+                    .padding(.bottom, 20)
                 }
             }
-                .ignoresSafeArea(edges: .bottom)
-                .onAppear {
-                    if forecast == nil || (Date().timeIntervalSince1970 - Double(forecast!.current.dt)) > 600 {
-                        viewStore.send(.loadCityForecast(city: city))
-                    }
+            .ignoresSafeArea(edges: .bottom)
+            .navigationTitle(city.description)
+            .navigationBarTitleDisplayMode(.large)
+            .navigationBarItems(trailing: Button(action: {
+                viewStore.send(.follow(city: city))
+            }) {
+                if viewStore.followingList.contains(where: { $0.id == city.id }) {
+                    EmptyView()
+                } else {
+                    Image(systemName: "star")
                 }
-                .navigationTitle(city.description)
-                .navigationBarTitleDisplayMode(.large)
-                .navigationBarItems(trailing: Button(action: {
-                    viewStore.send(.follow(city: city))
-                }) {
-                    if viewStore.followingList.contains(where: { $0.id == city.id }) {
-                        EmptyView()
-                    } else {
-                        Image(systemName: "star")
-                    }
-                })
+            })
         }
     }
 }

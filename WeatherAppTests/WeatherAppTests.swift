@@ -143,6 +143,43 @@ class WeatherAppTests: XCTestCase {
             $0.loadingCityIDSet = []
         }
     }
+    
+    func testSelectCity() {
+        let store = TestStore(
+            initialState: .init(),
+            reducer: weatherReducer,
+            environment: .init(
+                mainQueue: .immediate,
+                weatherClient: .failing,
+                followingClient: .falling,
+                date: { Date(timeIntervalSince1970: 1648699300) }
+            )
+        )
+        
+        let city = CityViewModel(city: SearchView_Previews.debugList()[0])
+        store.environment.weatherClient.oneCall = { _, _ in
+                .init(value: mockOneCall)
+        }
+        
+        // 测试选中城市
+        store.send(.search(.binding(.set(\.$selectedCity, city)))) {
+            $0.search.selectedCity = city
+        }
+
+        // 触发加载城市天气预报
+        store.receive(.forecast(.loadCityForecast(city: city))) {
+            $0.forecast.loadingCityIDSet = [city.id]
+        }
+        
+        // 成功加载
+        store.receive(.forecast(.loadCityForecastDone(cityID: city.id, result: .success(mockOneCall)))) {
+            $0.forecast.loadingCityIDSet = []
+            $0.forecast.forecast = [city.id: mockOneCall]
+        }
+        
+        // 再次点击城市，两次间隔不超过 600 秒，不触发刷新
+        store.send(.search(.binding(.set(\.$selectedCity, city))))
+    }
 }
 
 private let mockCities: [Find.City] = {

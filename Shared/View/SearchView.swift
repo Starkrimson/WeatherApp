@@ -6,33 +6,36 @@ struct SearchView: View {
     let store: Store<WeatherState, WeatherAction>
     
     var searchStore: Store<SearchState, SearchAction> {
-        store.scope(state: \.search,
-                                  action: WeatherAction.search)
+        store.scope(
+            state: \.search,
+            action: WeatherAction.search
+        )
     }
     
     var forecastStore: Store<ForecastState, ForecastAction> {
-        store.scope(state: \.forecast,
-                                   action: WeatherAction.forecast)
+        store.scope(
+            state: \.forecast,
+            action: WeatherAction.forecast
+        )
     }
     
     var body: some View {
-        WithViewStore(searchStore) { viewStore in
-            NavigationView {
-                List {
-                    SearchSection(viewStore: viewStore,
-                                  forecastStore: forecastStore)
+        WithViewStore(searchStore) { searchViewStore in
+            NavigationSplitView {
+                List(selection: searchViewStore.binding(\.$selectedCity)) {
+                    SearchSection(viewStore: searchViewStore)
                     FollowingSection(store: forecastStore)
                 }
                 .listStyle(.sidebar)
                 .navigationTitle("天气")
                 .navigationBarTitleDisplayMode(.large)
                 .searchable(
-                    text: viewStore.binding(\.$searchQuery),
+                    text: searchViewStore.binding(\.$searchQuery),
                     placement: .navigationBarDrawer(displayMode: .always),
                     prompt: "搜索城市"
                 )
                 .onSubmit(of: .search) {
-                    viewStore.send(.search(query: viewStore.searchQuery))
+                    searchViewStore.send(.search(query: searchViewStore.searchQuery))
                 }
                 #if os(iOS) && !targetEnvironment(macCatalyst)
                 .toolbar {
@@ -41,8 +44,18 @@ struct SearchView: View {
                     }
                 }
                 #endif
-                
-                Image(systemName: "cloud.sun").font(.largeTitle)
+            } detail: {
+                VStack {
+                    IfLetStore(
+                        store.scope(state: \.search.selectedCity)
+                    ) { letStore in
+                        WithViewStore(letStore) { letViewStore in
+                            CityView(store: forecastStore, city: letViewStore.state)
+                        }
+                    } else: {
+                        Image(systemName: "cloud.sun").font(.largeTitle)
+                    }
+                }
             }
         }
     }
@@ -73,7 +86,8 @@ struct SearchView_Previews: PreviewProvider {
                     },
                     oneCall: { _,_ in Effect(error: .badURL) }
                 ),
-                followingClient: .live
+                followingClient: .live,
+                date: Date.init
             )
         )
         return SearchView(store: store)
@@ -89,7 +103,6 @@ private extension Text {
 
 struct SearchSection: View {
     let viewStore: ViewStore<SearchState, SearchAction>
-    let forecastStore: Store<ForecastState, ForecastAction>
     
     var body: some View {
         switch (viewStore.status, viewStore.searchQuery.count) {
@@ -100,10 +113,7 @@ struct SearchSection: View {
         case (.normal, _) where viewStore.list.count > 0:
             Section(header: Text("搜索结果").headerText()) {
                 ForEach(viewStore.list) { city in
-                    NavigationLink(destination: CityView(
-                        store: forecastStore,
-                        city: CityViewModel(city: city))
-                    ) {
+                    NavigationLink(value: CityViewModel(city: city)) {
                         CityRow(city: city)
                     }
                 }
@@ -120,10 +130,7 @@ struct FollowingSection: View {
         WithViewStore(store) { viewStore in
             Section(header: Text("关注").headerText()) {
                 ForEach(viewStore.followingList) { city in
-                    NavigationLink(destination: CityView(
-                        store: store,
-                        city: city)
-                    ) {
+                    NavigationLink(value: city) {
                         HStack {
                             Text(city.description)
                                 .font(.headline)

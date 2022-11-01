@@ -7,7 +7,7 @@
 
 由 SwiftUI 驱动的跨平台 app，包括 UI 布局、状态管理、网络数据获取和本地数据存储等等。
 
-编译环境：macOS 12.0.1, Xcode 13.3, iOS 15.4
+编译环境：macOS 12.4, Xcode 14.0 beta, iOS 16.0 beta
 
 https://user-images.githubusercontent.com/16103570/160243859-863413ce-c1ca-4775-8c56-3a322cef9f30.mp4
 
@@ -119,6 +119,24 @@ NavigationView {
     }
     // 第二个 view 为右侧 detail view
     Image(systemName: "cloud.sun").font(.largeTitle)
+}
+
+// iOS16.0+ macOS13.0+
+NavigationSplitView { // sidebar
+    List(selection: searchViewStore.binding(\.$selectedCity)) {
+        SearchSection(viewStore: searchViewStore)
+        FollowingSection(store: forecastStore)
+    }
+} detail: { // detail
+    IfLetStore(
+        store.scope(state: \.search.selectedCity)
+    ) { letStore in
+        WithViewStore(letStore) { letViewStore in
+            CityView(store: forecastStore, city: letViewStore.state)
+        }
+    } else: {
+        Image(systemName: "cloud.sun").font(.largeTitle)
+    }
 }
 ```
 
