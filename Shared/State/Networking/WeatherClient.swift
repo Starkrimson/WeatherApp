@@ -2,28 +2,30 @@ import Foundation
 import ComposableArchitecture
 
 struct WeatherClient {
-    var searchCity: (String) -> Effect<[Find.City], AppError>
-    var oneCall: (_ lat: Double, _ lon: Double) -> Effect<OneCall, AppError>
+    var searchCity: @Sendable (String) async throws -> [Find.City]
+    var oneCall: @Sendable (_ lat: Double, _ lon: Double) async throws -> OneCall
 }
 
 private let appid = ""
 
-extension WeatherClient {
-    
-    static let live = WeatherClient(
+extension DependencyValues {
+    var weatherClient: WeatherClient {
+        get { self[WeatherClient.self] }
+        set { self[WeatherClient.self] = newValue }
+    }
+}
+
+extension WeatherClient: DependencyKey {
+    static var liveValue: WeatherClient = Self(
         searchCity: { query in
             guard let q = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
                   let url = URL(string: "https://openweathermap.org/data/2.5/find?q=\(q)&appid=\(appid)&units=metric")
                 else {
-                return Effect(error: .badURL)
+                throw AppError.badURL
             }
             
-            return URLSession.shared.dataTaskPublisher(for: url)
-                .map { $0.data }
-                .decode(type: Find.self, decoder: JSONDecoder())
-                .map { $0.list }
-                .mapError { AppError.networkingFailed($0) }
-                .eraseToEffect()
+            let (data, _) = try await URLSession.shared.data(from: url)
+            return try JSONDecoder().decode(Find.self, from: data).list
         },
         oneCall: { lat, lon in
             var components = URLComponents(string: "https://openweathermap.org/data/2.5/onecall")
@@ -34,19 +36,10 @@ extension WeatherClient {
                 .init(name: "lon", value: String(lon)),
             ]
             guard let url = components?.url else {
-                return Effect(error: .badURL)
+                throw AppError.badURL
             }
-            return URLSession.shared
-                .dataTaskPublisher(for: url)
-                .map { $0.data }
-                .decode(type: OneCall.self, decoder: JSONDecoder())
-                .mapError { AppError.networkingFailed($0) }
-                .eraseToEffect()
+            let (data, _) = try await URLSession.shared.data(from: url)
+            return try JSONDecoder().decode(OneCall.self, from: data)
         }
-    )
-    
-    static let failing = Self(
-        searchCity: { _ in .failing("WeatherClient.searchCity") },
-        oneCall: { _,_ in .failing("WeatherClient.oneCall") }
     )
 }

@@ -3,7 +3,7 @@ import Kingfisher
 import ComposableArchitecture
 
 struct CityView: View {
-    let store: Store<ForecastState, ForecastAction>
+    let store: StoreOf<ForecastReducer>
     let city: CityViewModel
         
     @State private var selectedDailyIndex: Int = 0
@@ -194,12 +194,7 @@ struct CityView_Previews: PreviewProvider {
         return CityView(
             store: .init(
                 initialState: .init(),
-                reducer: forecastReducer,
-                environment: ForecastEnvironment(
-                    mainQueue: .main,
-                    weatherClient: .live,
-                    followingClient: .live
-                )
+                reducer: ForecastReducer()
             ),
             city: city)
     }

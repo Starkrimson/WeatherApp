@@ -1,56 +1,45 @@
 import Foundation
 import ComposableArchitecture
 
-struct WeatherState: Equatable {
-    var search: SearchState = .init()
-    var forecast: ForecastState = .init()
-}
-
-enum WeatherAction: Equatable {
-    case search(SearchAction)
-    case forecast(ForecastAction)
-}
-
-struct WeatherEnvironment {
-    var mainQueue: AnySchedulerOf<DispatchQueue>
-    var weatherClient: WeatherClient
-    var followingClient: FollowingClient
-    var date: () -> Date
-}
-
-let weatherReducer = Reducer<WeatherState, WeatherAction, WeatherEnvironment>.combine(
-    searchReducer.pullback(
-        state: \.search,
-        action: /WeatherAction.search,
-        environment: {
-            SearchEnvironment(mainQueue: $0.mainQueue, weatherClient: $0.weatherClient)
+struct WeatherReducer: ReducerProtocol {
+    
+    struct State: Equatable {
+        var search: SearchReducer.State = .init()
+        var forecast: ForecastReducer.State = .init()
+    }
+    
+    enum Action: Equatable {
+        case search(SearchReducer.Action)
+        case forecast(ForecastReducer.Action)
+    }
+    
+    @Dependency(\.weatherClient) var weatherClient
+    @Dependency(\.date) var date
+        
+    var body: some ReducerProtocol<State, Action> {
+        Scope(state: \.search, action: /Action.search) {
+            SearchReducer()
         }
-    ),
-    forecastReducer.pullback(
-        state: \.forecast,
-        action: /WeatherAction.forecast,
-        environment: {
-            ForecastEnvironment(
-                mainQueue: $0.mainQueue,
-                weatherClient: $0.weatherClient,
-                followingClient: $0.followingClient
-            )
+        Scope(state: \.forecast, action: /Action.forecast) {
+            ForecastReducer()
         }
-    ),
-    Reducer<WeatherState, WeatherAction, WeatherEnvironment> { state, action, environment in
-        switch action {
-        // MARK: - binding. 选择了 city，触发刷新天气预报。
-        case .search(.binding(let binding)):
-            if binding.keyPath == \.$selectedCity, let city = state.search.selectedCity {
-                let forecast = state.forecast.forecast?[city.id]
-                if forecast == nil || (environment.date().timeIntervalSince1970 - Double(forecast!.current.dt)) > 600 {
-                    return .init(value: .forecast(.loadCityForecast(city: city)))
+        Reduce { state, action in
+            switch action {
+                // MARK: - binding. 选择了 city，触发刷新天气预报。
+                case .search(.binding(let binding)):
+                    if binding.keyPath == \.$selectedCity, let city = state.search.selectedCity {
+                        let forecast = state.forecast.forecast?[city.id]
+                        if forecast == nil || (date().timeIntervalSince1970 - Double(forecast!.current.dt)) > 600 {
+                            return .task {
+                                .forecast(.loadCityForecast(city: city))
+                            }
+                        }
+                    }
+                    return .none
+
+                default: return .none
                 }
-            }
-            return .none
-
-        default: return .none
         }
     }
-)
+}
 

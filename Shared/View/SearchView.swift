@@ -3,19 +3,19 @@ import ComposableArchitecture
 import Kingfisher
 
 struct SearchView: View {
-    let store: Store<WeatherState, WeatherAction>
+    let store: StoreOf<WeatherReducer>
     
-    var searchStore: Store<SearchState, SearchAction> {
+    var searchStore: StoreOf<SearchReducer> {
         store.scope(
             state: \.search,
-            action: WeatherAction.search
+            action: WeatherReducer.Action.search
         )
     }
     
-    var forecastStore: Store<ForecastState, ForecastAction> {
+    var forecastStore: StoreOf<ForecastReducer> {
         store.scope(
             state: \.forecast,
-            action: WeatherAction.forecast
+            action: WeatherReducer.Action.forecast
         )
     }
     
@@ -45,16 +45,14 @@ struct SearchView: View {
                 }
                 #endif
             } detail: {
-                VStack {
-                    IfLetStore(
-                        store.scope(state: \.search.selectedCity)
-                    ) { letStore in
-                        WithViewStore(letStore) { letViewStore in
-                            CityView(store: forecastStore, city: letViewStore.state)
-                        }
-                    } else: {
-                        Image(systemName: "cloud.sun").font(.largeTitle)
+                IfLetStore(
+                    store.scope(state: \.search.selectedCity)
+                ) { letStore in
+                    WithViewStore(letStore) { letViewStore in
+                        CityView(store: forecastStore, city: letViewStore.state)
                     }
+                } else: {
+                    Image(systemName: "cloud.sun").font(.largeTitle)
                 }
             }
         }
@@ -72,23 +70,8 @@ struct SearchView_Previews: PreviewProvider {
     
     static var previews: some View {
         let store = Store(
-            initialState: WeatherState(search: .init(searchQuery: "preview",
-                                                     list: debugList()),
-                                       forecast: .init()),
-            reducer: weatherReducer,
-            environment: WeatherEnvironment(
-                mainQueue: .main,
-                weatherClient: WeatherClient(
-                    searchCity: { _ in
-                        Effect(value: [
-                            debugList()[0]
-                        ])
-                    },
-                    oneCall: { _,_ in Effect(error: .badURL) }
-                ),
-                followingClient: .live,
-                date: Date.init
-            )
+            initialState: .init(search: .init(list: debugList())),
+            reducer: WeatherReducer()
         )
         return SearchView(store: store)
     }
@@ -102,7 +85,7 @@ private extension Text {
 }
 
 struct SearchSection: View {
-    let viewStore: ViewStore<SearchState, SearchAction>
+    let viewStore: ViewStore<SearchReducer.State, SearchReducer.Action>
     
     var body: some View {
         switch (viewStore.status, viewStore.searchQuery.count) {
@@ -124,7 +107,7 @@ struct SearchSection: View {
 }
 
 struct FollowingSection: View {
-    let store: Store<ForecastState, ForecastAction>
+    let store: StoreOf<ForecastReducer>
     
     var body: some View {
         WithViewStore(store) { viewStore in

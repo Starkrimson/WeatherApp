@@ -3,25 +3,46 @@ import ComposableArchitecture
 import CoreData
 
 struct FollowingClient {
-    var fetch: () -> Effect<[CityViewModel], AppError>
-    var save: (CityViewModel) -> Effect<CityViewModel, Never>
-    var delete: (CityViewModel) -> Effect<CityViewModel, Never>
-    var move: ([CityViewModel], _ indexSet: IndexSet, _ toIndex: Int) -> Effect<[CityViewModel], AppError>
+    var fetch: @Sendable () async throws -> [CityViewModel]
+    var save: @Sendable (CityViewModel) throws -> CityViewModel
+    var delete: @Sendable (CityViewModel) throws -> CityViewModel
+    var move: @Sendable ([CityViewModel], _ indexSet: IndexSet, _ toIndex: Int) throws -> [CityViewModel]
 }
 
-extension FollowingClient {
-    static let live = Self(
+extension DependencyValues {
+    var followingClient: FollowingClient {
+        get { self[FollowingClient.self] }
+        set { self[FollowingClient.self] = newValue }
+    }
+}
+
+extension FollowingClient: DependencyKey {
+    static var liveValue: FollowingClient = Self(
         fetch: {
-            Persistence.shared.fetch(FollowingCity.self, sortDescriptors: [
+            let context = Persistence.shared.viewContext
+            let request = FollowingCity.fetchRequest()
+            request.sortDescriptors = [
                 .init(keyPath: \FollowingCity.index, ascending: true)
-            ])
-            .map { $0.map(CityViewModel.init) }
+            ]
+            return try context.fetch(request).map(CityViewModel.init)
         },
         save: {
-            Persistence.shared.save($0)
-                .map { .init(city: $0 as! FollowingCity) }
+            let viewContext = Persistence.shared.viewContext
+            let object = $0.instance(with: viewContext)
+            if viewContext.hasChanges {
+                try viewContext.save()
+            }
+            return $0
         },
-        delete: Persistence.shared.delete,
+        delete: {
+            let viewContext = Persistence.shared.viewContext
+            let object = $0.instance(with: viewContext)
+            viewContext.delete(object)
+            if viewContext.hasChanges {
+                try viewContext.save()
+            }
+            return $0
+        },
         move: { list, indexSet, toIndex in
             var list = list
             list.move(fromOffsets: indexSet, toOffset: toIndex)
@@ -40,20 +61,15 @@ extension FollowingClient {
                 }
             }
             
-            do {
-                try Persistence.shared.viewContext.save()
-                return Effect(value: list)
-            } catch {
-                return Effect(error: .networkingFailed(error))
-            }
+            try Persistence.shared.viewContext.save()
+            return list
         }
     )
     
-    static let falling = Self(
-        fetch: { .failing("FollowingClient.fetch") },
-        save: { _ in .failing("FollowingClient.save") },
-        delete: { _ in .failing("FollowingClient.delete") },
-        move: { _,_,_ in .failing("FollowingClient.move") }
-    )
+//    static let falling = Self(
+//        fetch: { .failing("FollowingClient.fetch") },
+//        save: { _ in .failing("FollowingClient.save") },
+//        delete: { _ in .failing("FollowingClient.delete") },
+//        move: { _,_,_ in .failing("FollowingClient.move") }
+//    )
 }
-
