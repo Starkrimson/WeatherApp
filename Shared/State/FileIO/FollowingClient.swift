@@ -1,6 +1,7 @@
 import Foundation
 import ComposableArchitecture
 import CoreData
+import XCTestDynamicOverlay
 
 struct FollowingClient {
     var fetch: @Sendable () async throws -> [CityViewModel]
@@ -74,10 +75,12 @@ extension FollowingClient: DependencyKey {
         list
     }
     
-//    static let falling = Self(
-//        fetch: { .failing("FollowingClient.fetch") },
-//        save: { _ in .failing("FollowingClient.save") },
-//        delete: { _ in .failing("FollowingClient.delete") },
-//        move: { _,_,_ in .failing("FollowingClient.move") }
-//    )
+    static var testValue: FollowingClient = Self {
+        testCities.map(CityViewModel.init)
+    }
+    save: { $0 }
+    delete: { $0 }
+    move: { list, _, _ in
+        list
+    }
 }

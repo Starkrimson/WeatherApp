@@ -1,5 +1,6 @@
 import Foundation
 import ComposableArchitecture
+import XCTestDynamicOverlay
 
 struct WeatherClient {
     var searchCity: @Sendable (String) async throws -> [Find.City]
@@ -48,4 +49,9 @@ extension WeatherClient: DependencyKey {
     } oneCall: { _, _ in
         testOneCall
     }
+    
+    static var testValue: WeatherClient = Self(
+        searchCity: unimplemented("WeatherClient.searchCity"),
+        oneCall: unimplemented("WeatherClient.oneCall")
+    )
 }
