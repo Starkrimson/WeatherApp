@@ -8,6 +8,8 @@ struct ForecastReducer: ReducerProtocol {
         
         var forecast: [Int: OneCall]?
         var loadingCityIDSet: Set<Int> = []
+        
+        var errorDescription: String?
     }
     
     enum Action: Equatable {
@@ -77,6 +79,7 @@ struct ForecastReducer: ReducerProtocol {
             case .loadCityForecast(city: let city):
                 guard !state.loadingCityIDSet.contains(city.id) else { return .none }
                 state.loadingCityIDSet.insert(city.id)
+                state.errorDescription = nil
                 return .task {
                     await .loadCityForecastDone(cityID: city.id, result: TaskResult<OneCall> {
                         try await weatherClient.oneCall(city.coord.lat, city.coord.lon)
@@ -91,6 +94,7 @@ struct ForecastReducer: ReducerProtocol {
                     state.forecast = forecast
                 case .failure(let error):
                     dump(error)
+                    state.errorDescription = error.localizedDescription
                 }
                 return .none
             }

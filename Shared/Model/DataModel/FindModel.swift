@@ -1,12 +1,13 @@
 import Foundation
 
 struct Find: Codable {
-
     var message: String
     var cod: String
     var count: Int
     var list: [City]
+}
 
+extension Find {
     struct City: Codable, Equatable, Identifiable {
         var id: Int
         var name: String

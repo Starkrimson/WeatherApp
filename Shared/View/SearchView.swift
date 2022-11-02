@@ -87,7 +87,8 @@ struct SearchSection: View {
         case (_, 0): EmptyView()
         case (.loading, _): Text("搜索中...")
         case (.noResult, _): Text("无结果")
-        case (.failed(let tips), _): Text(tips)
+        case (.failed(let tips), _):
+            Label(tips, systemImage: "exclamationmark.circle")
         case (.normal, _) where viewStore.list.count > 0:
             Section(header: Text("搜索结果").headerText()) {
                 ForEach(viewStore.list) { city in

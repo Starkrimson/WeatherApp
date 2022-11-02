@@ -10,6 +10,10 @@ struct CityView: View {
     
     var body: some View {
         WithViewStore(store) { viewStore in
+            if let error = viewStore.errorDescription {
+                Label(error, systemImage: "exclamationmark.circle")
+                    .padding()
+            }
             ScrollView(.vertical) {
                 if let forecast = viewStore.forecast?[city.id] {
                     VStack(alignment: .leading) {

@@ -1,5 +1,31 @@
 import Foundation
 
+struct OpenWeatherResponse<Result: Codable>: Codable {
+    var cod: String?
+    var message: String?
+    
+    let result: Result
+    
+    init(from decoder: Decoder) throws {
+        let container: KeyedDecodingContainer<OpenWeatherResponse<Result>.CodingKeys> = try decoder.container(keyedBy: OpenWeatherResponse<Result>.CodingKeys.self)
+        self.message = try container.decodeIfPresent(String.self, forKey: OpenWeatherResponse<Result>.CodingKeys.message)
+
+        do {
+            cod = try String(container.decode(Int.self, forKey: .cod))
+        } catch DecodingError.typeMismatch {
+            cod = try container.decode(String.self, forKey: .cod)
+        } catch {
+            cod = nil
+        }
+
+        if let cod, cod != "200" {
+            throw AppError.errorDescription(message ?? "")
+        }
+        
+        self.result = try Result(from: decoder)
+    }
+}
+
 ///
 /// [one-call-parameter](https://openweathermap.org/api/one-call-api#parameter)
 ///
