@@ -1,13 +1,13 @@
 # WeatherApp
 
-> [《SwiftUI 与 Combine 编程》(喵神)](https://objccn.io/products/swift-ui) 读后实践
+> [《SwiftUI 与 Combine 编程》](https://objccn.io/products/swift-ui) + [TCA - SwiftUI 的救星？](https://onevcat.com/2021/12/tca-1/) (喵神) 读后实践
 
 一个天气 App，可搜索、关注城市，查看城市详细天气预报。
 
 
 由 SwiftUI 驱动的跨平台 app，包括 UI 布局、状态管理、网络数据获取和本地数据存储等等。
 
-编译环境：macOS 12.4, Xcode 14.0 beta, iOS 16.0 beta
+编译环境：macOS 13.0, Xcode 14.0.1, iOS 16.0
 
 https://user-images.githubusercontent.com/16103570/160243859-863413ce-c1ca-4775-8c56-3a322cef9f30.mp4
 
@@ -18,62 +18,76 @@ https://user-images.githubusercontent.com/16103570/160243859-863413ce-c1ca-4775-
 * State：即状态，是一个用于描述某个功能的执行逻辑，和渲染界面所需的数据的类。
 
 ```swift
-struct SearchState: Equatable {
-    @BindableState var searchQuery = ""
-    var list: [Find.City] = []
+struct SearchReducer: ReducerProtocol {
+    struct State: Equatable {
+        @BindableState var searchQuery = ""
+        var list: [Find.City] = []
+    }
 }
 ```
 
 * Action：一个代表在功能中所有可能的动作的类，如用户的行为、提醒，和事件源等。
 
 ```swift
-enum SearchAction: Equatable, BindableAction {
-    case binding(BindingAction<SearchState>)
-    case search(query: String)
-    case citiesResponse(Result<[Find.City], AppError>)
+struct SearchReducer: ReducerProtocol {
+    enum Action: Equatable, BindableAction {
+        case binding(BindingAction<SearchState>)
+        case search(query: String)
+        case citiesResponse(Result<[Find.City], AppError>)
+    }
 }
 ```
 
 * Environment：一个包含功能的依赖的类，如API客户端，分析客户端等。
 
 ```swift
-struct SearchEnvironment {
-    var mainQueue: AnySchedulerOf<DispatchQueue>
-    var weatherClient: WeatherClient
-}
+// SearchReducer ...
+
+@Dependency(\.weatherClient) var weatherClient
+
+// ...
 ```
 
 * Reducer：一个用于描述触发「Action」时，如何从当前状态（state）变化到下一个状态的函数，它同时负责返回任何需要被执行的「Effect」，如API请求（通过返回一个「Effect」实例来完成）。
 
 ```swift
-
-let searchReducer = Reducer<SearchState, SearchAction, SearchEnvironment> {
-    state, action, environment in
-    
-    switch action {
-    case .binding:
-        return .none
-    case .search(let query):
-        struct SearchCityId: Hashable { }
-        
-        return environment.weatherClient
-            .searchCity(query)
-            .receive(on: environment.mainQueue)
-            .catchToEffect(SearchAction.citiesResponse)
-            .cancellable(id: SearchCityId(), cancelInFlight: true)
-        
-    case .citiesResponse(let result):
-        switch result {
-        case .success(let list):
-            state.list = list
-        case .failure(let error):
-            state.list = []
+struct SearchReducer: ReducerProtocol {
+    var body: some ReducerProtocol<State, Action> {
+        BindingReducer()
+        Reduce { state, action in
+            switch action {
+            case .binding(let action):
+                if action.keyPath == \.$searchQuery, state.searchQuery.count == 0 {
+                    state.status = .normal
+                    state.list = []
+                }
+                return .none
+                
+            case .search(let query):
+                struct SearchCityId: Hashable { }
+                
+                guard state.status != .loading else { return .none }
+                state.status = .loading
+                return .task {
+                    await .citiesResponse(TaskResult<[Find.City]> {
+                        try await weatherClient.searchCity(query)
+                    })
+                }
+                
+            case .citiesResponse(let result):
+                switch result {
+                case .success(let list):
+                    state.status = list.count > 0 ? .normal : .noResult
+                    state.list = list
+                case .failure(let error):
+                    state.status = .failed(error.localizedDescription)
+                    state.list = []
+                }
+                return .none
+            }
         }
-        return .none
     }
 }
-    .binding()
-    .debug()
 ```
 
 * Store：用于驱动某个功能的运行时（runtime）。将所有用户行为发送到「Store」中，令它运行「Reducer」和「Effects」。同时从「Store」中观测「State」，以更新UI。
@@ -82,15 +96,14 @@ let searchReducer = Reducer<SearchState, SearchAction, SearchEnvironment> {
 SearchView(
     store: .init(
         initialState: .init(),
-        reducer: weatherReducer,
-        environment: WeatherEnvironment(mainQueue: .main, weatherClient: .live)
+        reducer: WeatherReducer()
     )
 )
 ```
 
 ```swift
 struct SearchView: View {
-    let store: Store<WeatherState, WeatherAction>
+    let store: StoreOf<WeatherReducer>
     
     var body: some View {
         WithViewStore(searchStore) { viewStore in
@@ -144,7 +157,7 @@ NavigationSplitView { // sidebar
 
 ```swift
 struct WeatherClient {
-    var searchCity: (String) -> Effect<[Find.City], AppError>
+    var searchCity: @Sendable (String) async throws -> [Find.City]
 }
 
 extension WeatherClient {
@@ -153,15 +166,11 @@ extension WeatherClient {
             guard let q = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
                   let url = URL(string: "https://openweathermap.org/data/2.5/find?q=\(q)&appid=\(appid)&units=metric")
                 else {
-                return Effect(error: .badURL)
+                throw AppError.badURL
             }
             
-            return URLSession.shared.dataTaskPublisher(for: url)
-                .map { $0.data }
-                .decode(type: Find.self, decoder: JSONDecoder())
-                .map { $0.list }
-                .mapError { AppError.networkingFailed($0) }
-                .eraseToEffect()
+            let (data, _) = try await URLSession.shared.data(from: url)
+            return try JSONDecoder().decode(Find.self, from: data).list
         }
     )
 ```
