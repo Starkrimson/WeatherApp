@@ -42,4 +42,10 @@ extension WeatherClient: DependencyKey {
             return try JSONDecoder().decode(OneCall.self, from: data)
         }
     )
+    
+    static var previewValue: WeatherClient = Self { _ in
+        testCities
+    } oneCall: { _, _ in
+        testOneCall
+    }
 }

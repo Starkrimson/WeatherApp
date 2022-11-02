@@ -188,14 +188,21 @@ private struct DailyView: View {
     }
 }
 
+#if DEBUG
 struct CityView_Previews: PreviewProvider {
     static var previews: some View {
-        let city = CityViewModel(city: SearchView_Previews.debugList()[0])
-        return CityView(
-            store: .init(
-                initialState: .init(),
-                reducer: ForecastReducer()
-            ),
-            city: city)
+        let city = CityViewModel(city: testCities[0])
+        let store: StoreOf<ForecastReducer> = .init(
+            initialState: .init(),
+            reducer: ForecastReducer()
+        )
+        
+        WithViewStore(store, observe: { $0 }) { viewStore in
+            CityView(store: store, city: city)
+                .task {
+                    viewStore.send(.loadCityForecast(city: city))
+                }
+        }
     }
 }
+#endif

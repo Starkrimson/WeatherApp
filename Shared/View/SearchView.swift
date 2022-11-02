@@ -59,23 +59,18 @@ struct SearchView: View {
     }
 }
 
+#if DEBUG
 struct SearchView_Previews: PreviewProvider {
-    static func debugList() -> [Find.City] {
-        guard let url = Bundle.main.url(forResource: "Cities", withExtension: "json"),
-              let data = try? Data(contentsOf: url),
-              let list = try? JSONDecoder().decode([Find.City].self, from: data)
-            else { return [] }
-        return list
-    }
-    
     static var previews: some View {
-        let store = Store(
-            initialState: .init(search: .init(list: debugList())),
-            reducer: WeatherReducer()
+        SearchView(
+            store: .init(
+                initialState: .init(),
+                reducer: WeatherReducer()
+            )
         )
-        return SearchView(store: store)
     }
 }
+#endif
 
 private extension Text {
     func headerText() -> some View {

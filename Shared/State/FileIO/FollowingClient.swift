@@ -65,6 +65,14 @@ extension FollowingClient: DependencyKey {
             return list
         }
     )
+    static var previewValue: FollowingClient = Self {
+        testCities.map(CityViewModel.init)
+    }
+    save: { $0 }
+    delete: { $0 }
+    move: { list, _, _ in
+        list
+    }
     
 //    static let falling = Self(
 //        fetch: { .failing("FollowingClient.fetch") },

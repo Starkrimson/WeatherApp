@@ -1,3 +1,7 @@
+import Foundation
+
+let testCities = try! JSONDecoder().decode([Find.City].self, from: testCitiesData)
+let testCitiesData = """
 [
   {
     "id": 1809858,
@@ -69,3 +73,4 @@
     ]
   }
 ]
+""".data(using: .utf8)!
