@@ -7,23 +7,17 @@ struct WeatherApp: App {
             SearchView(
                 store: .init(
                     initialState: .init(),
-                    reducer: weatherReducer,
-                    environment: WeatherEnvironment(
-                        mainQueue: .main,
-                        weatherClient: .live,
-                        followingClient: .live,
-                        date: Date.init
-                    )
+                    reducer: WeatherReducer()
                 )
             )
-                .withHostingWindow { window in
-                    #if targetEnvironment(macCatalyst)
-                    if let titleBar = window?.windowScene?.titlebar {
-                        titleBar.titleVisibility = .hidden
-                        titleBar.toolbar = nil
-                    }
-                    #endif
+            .withHostingWindow { window in
+                #if targetEnvironment(macCatalyst)
+                if let titleBar = window?.windowScene?.titlebar {
+                    titleBar.titleVisibility = .hidden
+                    titleBar.toolbar = nil
                 }
+                #endif
+            }
         }
     }
 }

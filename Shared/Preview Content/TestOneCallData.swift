@@ -1,3 +1,7 @@
+import Foundation
+
+let testOneCall = try! JSONDecoder().decode(OneCall.self, from: testOneCallData)
+let testOneCallData = """
 {
   "daily": [
     {
@@ -1480,3 +1484,4 @@
     }
   ]
 }
+""".data(using: .utf8)!
