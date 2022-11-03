@@ -28,16 +28,15 @@ struct CityView: View {
             .ignoresSafeArea(edges: .bottom)
             .navigationTitle(city.description)
             .toolbar {
-                ToolbarItem {
-                    Button(action: {
-                       viewStore.send(.follow(city: city))
-                   }) {
-                       if viewStore.followingList.contains(where: { $0.id == city.id }) {
-                           EmptyView()
-                       } else {
-                           Image(systemName: "star")
-                       }
-                   }
+                if !viewStore.followingList.contains(where: { $0.id == city.id }) {
+                    ToolbarItem {
+                        Button(action: {
+                            viewStore.send(.follow(city: city))
+                        }) {
+                            Image(systemName: "star")
+                        }
+                        .keyboardShortcut("f")
+                    }
                 }
             }
         }

@@ -7,7 +7,7 @@
 
 由 SwiftUI 驱动的跨平台 app，包括 UI 布局、状态管理、网络数据获取和本地数据存储等等。
 
-编译环境：macOS 13.0, Xcode 14.0.1, iOS 16.0
+编译环境：macOS 13.0, Xcode 14.1, iOS 16.1
 
 https://user-images.githubusercontent.com/16103570/160243859-863413ce-c1ca-4775-8c56-3a322cef9f30.mp4
 
