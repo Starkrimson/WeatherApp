@@ -116,10 +116,17 @@ struct FollowingSection: View {
                             Spacer()
                             KFImage(city.country.flagURL)
                         }
+                        .contextMenu {
+                            Button(role: .destructive) {
+                                viewStore.send(.unfollowCity(city: city))
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
                     }
                 }
                 .onDelete { (indexSet: IndexSet) in
-                    viewStore.send(.unfollowCity(indexSet: indexSet))
+                    viewStore.send(.unfollowCityAt(indexSet: indexSet))
                 }
                 .onMove { set, i in
                     viewStore.send(.moveCity(indexSet: set, toIndex: i))

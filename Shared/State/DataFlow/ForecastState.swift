@@ -18,7 +18,8 @@ struct ForecastReducer: ReducerProtocol {
         
         case follow(city: CityViewModel)
         case followDone(TaskResult<CityViewModel>)
-        case unfollowCity(indexSet: IndexSet)
+        case unfollowCityAt(indexSet: IndexSet)
+        case unfollowCity(city: CityViewModel)
         case unfollowCityDone(TaskResult<CityViewModel>)
         case moveCity(indexSet: IndexSet, toIndex: Int)
         
@@ -59,8 +60,12 @@ struct ForecastReducer: ReducerProtocol {
                     state.followingList.append(city)
                 }
                 return .none
-            case .unfollowCity(let indexSet):
+            case .unfollowCityAt(let indexSet):
                 return .task { [city = state.followingList[indexSet.first!]] in
+                    .unfollowCity(city: city)
+                }
+            case .unfollowCity(let city):
+                return .task {
                     await .unfollowCityDone(TaskResult<CityViewModel> {
                         try followingClient.delete(city)
                     })
