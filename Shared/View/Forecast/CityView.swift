@@ -27,16 +27,19 @@ struct CityView: View {
             }
             .ignoresSafeArea(edges: .bottom)
             .navigationTitle(city.description)
-            .navigationBarTitleDisplayMode(.large)
-            .navigationBarItems(trailing: Button(action: {
-                viewStore.send(.follow(city: city))
-            }) {
-                if viewStore.followingList.contains(where: { $0.id == city.id }) {
-                    EmptyView()
-                } else {
-                    Image(systemName: "star")
+            .toolbar {
+                ToolbarItem {
+                    Button(action: {
+                       viewStore.send(.follow(city: city))
+                   }) {
+                       if viewStore.followingList.contains(where: { $0.id == city.id }) {
+                           EmptyView()
+                       } else {
+                           Image(systemName: "star")
+                       }
+                   }
                 }
-            })
+            }
         }
     }
 }
@@ -48,7 +51,9 @@ private struct CurrentView: View {
         current.weather.first
     }
     
+    #if os(iOS)
     @Environment(\.horizontalSizeClass) var horizontalSizeClass: UserInterfaceSizeClass?
+    #endif
     
     var feelsLike: some View {
         Text("Feels like \(current.feels_like.celsius). \(weather?.description.capitalized ?? "")")
@@ -87,6 +92,7 @@ private struct CurrentView: View {
                     .padding(.top, 10)
                     .padding(.bottom, 5)
     
+                #if os(iOS)
                 if horizontalSizeClass == .compact {
                     HStack {
                         temp.layoutPriority(1)
@@ -95,7 +101,7 @@ private struct CurrentView: View {
                             .padding(.horizontal, 10)
                         feelsLike
                     }
-                        .padding(.trailing, 10)
+                    .padding(.trailing, 10)
                 } else {
                     feelsLike
                     HStack {
@@ -106,6 +112,16 @@ private struct CurrentView: View {
                         weatherItems
                     }
                 }
+                #else
+                feelsLike
+                HStack {
+                    temp
+                    Divider()
+                        .background(Color(.systemRed))
+                        .padding(.horizontal, 20)
+                    weatherItems
+                }
+                #endif
             }
     }
 }
