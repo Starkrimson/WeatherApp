@@ -19,6 +19,14 @@ struct SearchView: View {
         )
     }
     
+    var searchFieldPlacement: SearchFieldPlacement {
+        #if os(iOS)
+        return .navigationBarDrawer(displayMode: .always)
+        #else
+        return .sidebar
+        #endif
+    }
+    
     var body: some View {
         WithViewStore(searchStore) { searchViewStore in
             NavigationSplitView {
@@ -28,16 +36,15 @@ struct SearchView: View {
                 }
                 .listStyle(.sidebar)
                 .navigationTitle("天气")
-                .navigationBarTitleDisplayMode(.large)
                 .searchable(
                     text: searchViewStore.binding(\.$searchQuery),
-                    placement: .navigationBarDrawer(displayMode: .always),
+                    placement: searchFieldPlacement,
                     prompt: "搜索城市"
                 )
                 .onSubmit(of: .search) {
                     searchViewStore.send(.search(query: searchViewStore.searchQuery))
                 }
-                #if os(iOS) && !targetEnvironment(macCatalyst)
+                #if os(iOS)
                 .toolbar {
                     ToolbarItem {
                         EditButton()
@@ -72,13 +79,6 @@ struct SearchView_Previews: PreviewProvider {
 }
 #endif
 
-private extension Text {
-    func headerText() -> some View {
-        font(.footnote)
-            .foregroundColor(Color(.systemGray2))
-    }
-}
-
 struct SearchSection: View {
     let viewStore: ViewStore<SearchReducer.State, SearchReducer.Action>
     
@@ -87,9 +87,10 @@ struct SearchSection: View {
         case (_, 0): EmptyView()
         case (.loading, _): Text("搜索中...")
         case (.noResult, _): Text("无结果")
-        case (.failed(let tips), _): Text(tips)
+        case (.failed(let tips), _):
+            Label(tips, systemImage: "exclamationmark.circle")
         case (.normal, _) where viewStore.list.count > 0:
-            Section(header: Text("搜索结果").headerText()) {
+            Section("搜索结果") {
                 ForEach(viewStore.list) { city in
                     NavigationLink(value: CityViewModel(city: city)) {
                         CityRow(city: city)
@@ -106,7 +107,7 @@ struct FollowingSection: View {
     
     var body: some View {
         WithViewStore(store) { viewStore in
-            Section(header: Text("关注").headerText()) {
+            Section("关注") {
                 ForEach(viewStore.followingList) { city in
                     NavigationLink(value: city) {
                         HStack {
@@ -115,10 +116,17 @@ struct FollowingSection: View {
                             Spacer()
                             KFImage(city.country.flagURL)
                         }
+                        .contextMenu {
+                            Button(role: .destructive) {
+                                viewStore.send(.unfollowCity(city: city))
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
                     }
                 }
                 .onDelete { (indexSet: IndexSet) in
-                    viewStore.send(.unfollowCity(indexSet: indexSet))
+                    viewStore.send(.unfollowCityAt(indexSet: indexSet))
                 }
                 .onMove { set, i in
                     viewStore.send(.moveCity(indexSet: set, toIndex: i))

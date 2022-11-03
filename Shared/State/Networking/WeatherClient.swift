@@ -26,7 +26,7 @@ extension WeatherClient: DependencyKey {
             }
             
             let (data, _) = try await URLSession.shared.data(from: url)
-            return try JSONDecoder().decode(Find.self, from: data).list
+            return try JSONDecoder().decode(OpenWeatherResponse<Find>.self, from: data).result.list
         },
         oneCall: { lat, lon in
             var components = URLComponents(string: "https://openweathermap.org/data/2.5/onecall")
@@ -40,7 +40,7 @@ extension WeatherClient: DependencyKey {
                 throw AppError.badURL
             }
             let (data, _) = try await URLSession.shared.data(from: url)
-            return try JSONDecoder().decode(OneCall.self, from: data)
+            return try JSONDecoder().decode(OpenWeatherResponse<OneCall>.self, from: data).result
         }
     )
     

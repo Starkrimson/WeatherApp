@@ -8,6 +8,8 @@ struct ForecastReducer: ReducerProtocol {
         
         var forecast: [Int: OneCall]?
         var loadingCityIDSet: Set<Int> = []
+        
+        var errorDescription: String?
     }
     
     enum Action: Equatable {
@@ -16,7 +18,8 @@ struct ForecastReducer: ReducerProtocol {
         
         case follow(city: CityViewModel)
         case followDone(TaskResult<CityViewModel>)
-        case unfollowCity(indexSet: IndexSet)
+        case unfollowCityAt(indexSet: IndexSet)
+        case unfollowCity(city: CityViewModel)
         case unfollowCityDone(TaskResult<CityViewModel>)
         case moveCity(indexSet: IndexSet, toIndex: Int)
         
@@ -57,8 +60,12 @@ struct ForecastReducer: ReducerProtocol {
                     state.followingList.append(city)
                 }
                 return .none
-            case .unfollowCity(let indexSet):
+            case .unfollowCityAt(let indexSet):
                 return .task { [city = state.followingList[indexSet.first!]] in
+                    .unfollowCity(city: city)
+                }
+            case .unfollowCity(let city):
+                return .task {
                     await .unfollowCityDone(TaskResult<CityViewModel> {
                         try followingClient.delete(city)
                     })
@@ -77,6 +84,7 @@ struct ForecastReducer: ReducerProtocol {
             case .loadCityForecast(city: let city):
                 guard !state.loadingCityIDSet.contains(city.id) else { return .none }
                 state.loadingCityIDSet.insert(city.id)
+                state.errorDescription = nil
                 return .task {
                     await .loadCityForecastDone(cityID: city.id, result: TaskResult<OneCall> {
                         try await weatherClient.oneCall(city.coord.lat, city.coord.lon)
@@ -91,6 +99,7 @@ struct ForecastReducer: ReducerProtocol {
                     state.forecast = forecast
                 case .failure(let error):
                     dump(error)
+                    state.errorDescription = error.localizedDescription
                 }
                 return .none
             }

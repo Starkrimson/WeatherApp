@@ -16,7 +16,17 @@ struct DailyForecastDetailView: View {
             }
     }
     
+    #if os(iOS)
     @Environment(\.horizontalSizeClass) var horizontalSizeClass: UserInterfaceSizeClass?
+    #endif
+    
+    var isRegularSize: Bool {
+        #if os(iOS)
+        return horizontalSizeClass == .regular
+        #else
+        return true
+        #endif
+    }
     
     var body: some View {
         let weather = daily.weather.first
@@ -31,11 +41,11 @@ struct DailyForecastDetailView: View {
                     Text(weather?.description.capitalized ?? "")
                         .font(.title2)
                         .fontWeight(.medium)
-                    Text("The high will be \(daily.temp.max?.celsius ?? ""),\(horizontalSizeClass == .compact ? "\n" : " ")the low will be \(daily.temp.min?.celsius ?? "").")
+                    Text("The high will be \(daily.temp.max?.celsius ?? ""),\(!isRegularSize ? "\n" : " ")the low will be \(daily.temp.min?.celsius ?? "").")
                 }
             }
             HStack {
-                if horizontalSizeClass == .regular {
+                if isRegularSize {
                     Divider()
                         .background(Color(.systemRed))
                         .padding(.leading, 10)
@@ -92,7 +102,7 @@ struct DailyForecastDetailView: View {
 private extension Text {
     func footnote() -> some View {
         font(.footnote)
-            .foregroundColor(Color(.systemGray2))
+            .foregroundColor(.secondary)
             .frame(height: 20)
     }
 }

@@ -46,15 +46,14 @@ struct SearchReducer: ReducerProtocol {
                     })
                 }
                 
-            case .citiesResponse(let result):
-                switch result {
-                case .success(let list):
-                    state.status = list.count > 0 ? .normal : .noResult
-                    state.list = list
-                case .failure(let error):
-                    state.status = .failed(error.localizedDescription)
-                    state.list = []
-                }
+            case .citiesResponse(.success(let list)):
+                state.status = list.count > 0 ? .normal : .noResult
+                state.list = list
+                return .none
+                
+            case .citiesResponse(.failure(let error)):
+                state.status = .failed(error.localizedDescription)
+                state.list = []
                 return .none
             }
         }
