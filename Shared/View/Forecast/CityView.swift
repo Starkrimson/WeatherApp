@@ -9,7 +9,9 @@ struct CityView: View {
     @State private var selectedDailyIndex: Int = 0
     
     var body: some View {
-        WithViewStore(store) { viewStore in
+        WithViewStore(store) {
+            $0
+        } content: { viewStore in
             if let error = viewStore.errorDescription {
                 Label(error, systemImage: "exclamationmark.circle")
                     .padding()
@@ -212,8 +214,8 @@ struct CityView_Previews: PreviewProvider {
     static var previews: some View {
         let city = CityViewModel(city: testCities[0])
         let store: StoreOf<ForecastReducer> = .init(
-            initialState: .init(),
-            reducer: ForecastReducer()
+            initialState: ForecastReducer.State(),
+            reducer: { ForecastReducer() }
         )
         
         WithViewStore(store, observe: { $0 }) { viewStore in

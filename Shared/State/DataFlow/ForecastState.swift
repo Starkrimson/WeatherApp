@@ -1,7 +1,7 @@
 import Foundation
 import ComposableArchitecture
 
-struct ForecastReducer: ReducerProtocol {
+struct ForecastReducer: Reducer {
     
     struct State: Equatable {
         var followingList: [CityViewModel] = []
@@ -30,14 +30,14 @@ struct ForecastReducer: ReducerProtocol {
     @Dependency(\.weatherClient) var weatherClient
     @Dependency(\.followingClient) var followingClient
         
-    var body: some ReducerProtocol<State, Action> {
+    var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
             case .fetchFollowingCity:
-                return .task {
-                    await .fetchFollowingCityDone(TaskResult<[CityViewModel]> {
+                return .run { send in
+                    await send(.fetchFollowingCityDone(TaskResult<[CityViewModel]> {
                         try await followingClient.fetch()
-                    })
+                    }))
                 }
             case .fetchFollowingCityDone(let result):
                 switch result {
@@ -48,12 +48,12 @@ struct ForecastReducer: ReducerProtocol {
                 }
                 return .none
             case .follow(let city):
-                return .task { [lastIndex = state.followingList.last?.index ?? 0] in
-                    await .followDone(TaskResult<CityViewModel> {
+                return .run { [lastIndex = state.followingList.last?.index ?? 0] send in
+                    await send(.followDone(TaskResult<CityViewModel> {
                         var city = city
                         city.index = Int(lastIndex + 1)
                         return try followingClient.save(city)
-                    })
+                    }))
                 }
             case .followDone(let result):
                 if case let .success(city) = result {
@@ -61,14 +61,14 @@ struct ForecastReducer: ReducerProtocol {
                 }
                 return .none
             case .unfollowCityAt(let indexSet):
-                return .task { [city = state.followingList[indexSet.first!]] in
-                    .unfollowCity(city: city)
+                return .run { [city = state.followingList[indexSet.first!]] send in
+                    await send(.unfollowCity(city: city))
                 }
             case .unfollowCity(let city):
-                return .task {
-                    await .unfollowCityDone(TaskResult<CityViewModel> {
+                return .run { send in
+                    await send(.unfollowCityDone(TaskResult<CityViewModel> {
                         try followingClient.delete(city)
-                    })
+                    }))
                 }
             case .unfollowCityDone(let result):
                 if case let .success(city) = result {
@@ -76,19 +76,19 @@ struct ForecastReducer: ReducerProtocol {
                 }
                 return .none
             case let .moveCity(indexSet, toIndex):
-                return .task { [followingList = state.followingList] in
-                    await .fetchFollowingCityDone(TaskResult<[CityViewModel]> {
+                return .run { [followingList = state.followingList] send in
+                    await send(.fetchFollowingCityDone(TaskResult<[CityViewModel]> {
                         try followingClient.move(followingList, indexSet, toIndex)
-                    })
+                    }))
                 }
             case .loadCityForecast(city: let city):
                 guard !state.loadingCityIDSet.contains(city.id) else { return .none }
                 state.loadingCityIDSet.insert(city.id)
                 state.errorDescription = nil
-                return .task {
-                    await .loadCityForecastDone(cityID: city.id, result: TaskResult<OneCall> {
+                return .run { send in
+                    await send(.loadCityForecastDone(cityID: city.id, result: TaskResult<OneCall> {
                         try await weatherClient.oneCall(city.coord.lat, city.coord.lon)
-                    })
+                    }))
                 }
             case .loadCityForecastDone(cityID: let cityID, result: let result):
                 state.loadingCityIDSet.remove(cityID)

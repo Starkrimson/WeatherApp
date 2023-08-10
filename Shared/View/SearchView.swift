@@ -28,16 +28,16 @@ struct SearchView: View {
     }
     
     var body: some View {
-        WithViewStore(searchStore) { searchViewStore in
+        WithViewStore(searchStore) { $0 } content: { searchViewStore in
             NavigationSplitView {
-                List(selection: searchViewStore.binding(\.$selectedCity)) {
+                List(selection: searchViewStore.$selectedCity) {
                     SearchSection(viewStore: searchViewStore)
                     FollowingSection(store: forecastStore)
                 }
                 .listStyle(.sidebar)
                 .navigationTitle("天气")
                 .searchable(
-                    text: searchViewStore.binding(\.$searchQuery),
+                    text: searchViewStore.$searchQuery,
                     placement: searchFieldPlacement,
                     prompt: "搜索城市"
                 )
@@ -52,14 +52,14 @@ struct SearchView: View {
                 }
                 #endif
             } detail: {
-                IfLetStore(
-                    store.scope(state: \.search.selectedCity)
-                ) { letStore in
-                    WithViewStore(letStore) { letViewStore in
-                        CityView(store: forecastStore, city: letViewStore.state)
+                WithViewStore(searchStore) {
+                    $0.selectedCity
+                } content: { viewStore in
+                    if let state = viewStore.state {
+                        CityView(store: forecastStore, city: state)
+                    } else {
+                        Image(systemName: "cloud.sun").font(.largeTitle)
                     }
-                } else: {
-                    Image(systemName: "cloud.sun").font(.largeTitle)
                 }
             }
         }
@@ -72,7 +72,7 @@ struct SearchView_Previews: PreviewProvider {
         SearchView(
             store: .init(
                 initialState: .init(),
-                reducer: WeatherReducer()
+                reducer: { WeatherReducer() }
             )
         )
     }
@@ -106,7 +106,7 @@ struct FollowingSection: View {
     let store: StoreOf<ForecastReducer>
     
     var body: some View {
-        WithViewStore(store) { viewStore in
+        WithViewStore(store) { $0 } content: { viewStore in
             Section("关注") {
                 ForEach(viewStore.followingList) { city in
                     NavigationLink(value: city) {

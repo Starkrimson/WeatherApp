@@ -20,38 +20,6 @@ class Persistence {
         }
         return container
     }()
-        
-    func fetch<T>(_ type: T.Type, sortDescriptors: [NSSortDescriptor]? = nil)
-    -> Effect<[T], AppError> where T: NSManagedObject {
-        do {
-            let context = Persistence.shared.viewContext
-            let request = T.fetchRequest()
-            request.sortDescriptors = sortDescriptors
-            let value = try context.fetch(request)
-            return Effect(value: value as! [T])
-        } catch {
-            return Effect(error: .networkingFailed(error))
-        }
-    }
-    
-    func save<Element>(_ e: Element)
-    -> Effect<NSManagedObject, Never> where Element: ManagedObject {
-        let object = e.instance(with: viewContext)
-        if viewContext.hasChanges {
-            try? viewContext.save()
-        }
-        return Effect(value: object)
-    }
-    
-    func delete<Element>(_ e: Element)
-    -> Effect<Element, Never> where Element: ManagedObject {
-        let object = e.instance(with: viewContext)
-        viewContext.delete(object)
-        if viewContext.hasChanges {
-            try? viewContext.save()
-        }
-        return Effect(value: e)
-    }
 }
 
 protocol ManagedObject {

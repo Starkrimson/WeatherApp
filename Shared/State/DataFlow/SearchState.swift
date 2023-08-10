@@ -1,15 +1,15 @@
 import Foundation
 import ComposableArchitecture
 
-struct SearchReducer: ReducerProtocol {
+struct SearchReducer: Reducer {
     
     struct State: Equatable {
         
-        @BindableState var searchQuery = ""
+        @BindingState var searchQuery = ""
         var list: [Find.City] = []
         var status: Status = .normal
         
-        @BindableState var selectedCity: CityViewModel?
+        @BindingState var selectedCity: CityViewModel?
         
         enum Status: Equatable {
             case normal, loading, noResult, failed(String)
@@ -24,15 +24,18 @@ struct SearchReducer: ReducerProtocol {
     
     @Dependency(\.weatherClient) var weatherClient
         
-    var body: some ReducerProtocol<State, Action> {
+    var body: some ReducerOf<Self> {
         BindingReducer()
         Reduce { state, action in
             switch action {
-            case .binding(let action):
-                if action.keyPath == \.$searchQuery, state.searchQuery.count == 0 {
+            case .binding(\.$searchQuery):
+                if state.searchQuery.count == 0 {
                     state.status = .normal
                     state.list = []
                 }
+                return .none
+
+            case .binding:
                 return .none
                 
             case .search(let query):
@@ -40,10 +43,10 @@ struct SearchReducer: ReducerProtocol {
                 
                 guard state.status != .loading else { return .none }
                 state.status = .loading
-                return .task {
-                    await .citiesResponse(TaskResult<[Find.City]> {
+                return .run { send in
+                    await send(.citiesResponse(TaskResult<[Find.City]> {
                         try await weatherClient.searchCity(query)
-                    })
+                    }))
                 }
                 
             case .citiesResponse(.success(let list)):

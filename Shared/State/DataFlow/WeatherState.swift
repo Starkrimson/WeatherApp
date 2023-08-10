@@ -1,7 +1,7 @@
 import Foundation
 import ComposableArchitecture
 
-struct WeatherReducer: ReducerProtocol {
+struct WeatherReducer: Reducer {
     
     struct State: Equatable {
         var search: SearchReducer.State = .init()
@@ -16,7 +16,7 @@ struct WeatherReducer: ReducerProtocol {
     @Dependency(\.weatherClient) var weatherClient
     @Dependency(\.date) var date
         
-    var body: some ReducerProtocol<State, Action> {
+    var body: some ReducerOf<Self> {
         Scope(state: \.search, action: /Action.search) {
             SearchReducer()
         }
@@ -30,8 +30,8 @@ struct WeatherReducer: ReducerProtocol {
                     if binding.keyPath == \.$selectedCity, let city = state.search.selectedCity {
                         let forecast = state.forecast.forecast?[city.id]
                         if forecast == nil || (date().timeIntervalSince1970 - Double(forecast!.current.dt)) > 600 {
-                            return .task {
-                                .forecast(.loadCityForecast(city: city))
+                            return .run { send in
+                                await send(.forecast(.loadCityForecast(city: city)))
                             }
                         }
                     }

@@ -7,7 +7,7 @@ struct WeatherApp: App {
             SearchView(
                 store: .init(
                     initialState: .init(),
-                    reducer: WeatherReducer()
+                    reducer: { WeatherReducer() }
                 )
             )
         }
